@@ -1,0 +1,8 @@
+<samples>
+	<sample filename="lovedrops.wav">
+		<pad id="1" />
+	</sample>
+	<sample filename="sexy_coffee_pot.wav">
+		<pad id="2" />
+	</sample>
+</samples>
