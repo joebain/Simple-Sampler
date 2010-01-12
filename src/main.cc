@@ -1,3 +1,5 @@
+//#include "main.h"
+
 #include <pthread.h>
 #include <iostream>
 #include <stdlib.h>
@@ -5,24 +7,22 @@
 #include "server.h"
 #include "client.h"
 
-Server* server;
 Client* client;
+Server* server;
 
 void* start_server(void* args) {
 	server->start();
-	
+	std::cout << "done server" << std::endl;
 	return NULL;
 }
 
 void* start_client(void* args) {
 	client->start();
-	
+	std::cout << "done client" << std::endl;
 	return NULL;
 }
 
 int main (int argc, char *argv[]) {
-	system("pwd");
-	
 	server = new Server();
 	client = new Client(server);
 
@@ -32,7 +32,7 @@ int main (int argc, char *argv[]) {
 	pthread_create( &thread2, NULL, start_client, NULL);
 
 	pthread_join( thread1, NULL);
-    pthread_join( thread2, NULL);
+	pthread_join( thread2, NULL);
 	
 	return 0;
 }

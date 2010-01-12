@@ -6,14 +6,14 @@ VPATH = $(SRC_DIR)
 
 COMMON_CCFLAGS := -g -c -Wall
 
-MAIN_EXE := $(BIN_DIR)/simple-sample
-MAIN_OBJ := $(BIN_DIR)/libsimple-sample.a
+MAIN_EXE := $(BIN_DIR)/simple-sampler
+MAIN_OBJ := $(BIN_DIR)/libsimple-sampler.a
 
 .PHONY: all
 all: $(MAIN_OBJ) $(MAIN_EXE)
 
 CCFLAGS := $(COMMON_CCFLAGS)
-LIBS := `pkg-config --cflags --libs jack sndfile` -lm
+LIBS := `pkg-config --cflags --libs jack sndfile libxml++-2.6 rubberband` -lm
 
 SRC_FILES := $(wildcard $(SRC_DIR)/*.cc)
 OBJECT_FILES := $(notdir $(SRC_FILES:.cc=.o))

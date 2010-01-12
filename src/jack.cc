@@ -1,21 +1,29 @@
 #include "jack.h"
 
 #include <jack/jack.h>
+#include <jack/midiport.h>
 #include <iostream>
+#include <string.h>
+
+#include "main.h"
+#include "server.h"
 
 Jack::Jack() {
-	input_port_name = "input";
-	output_port_name = "output";
+	input_port_name = "audio_out";
+	output_port_name = "audio_in";
+	input_midi_port_name = "midi_in";
+	output_midi_port_name = "midi_out";
 	client_name = "sampler";
+	
+	ready = false;
+	started = false;
 }
 
 bool Jack::connect() {
-	started = 0;
-	
+		
 	std::string server_name = "";
 	jack_options_t options = JackNullOption;
 	jack_status_t status;
-
 
 	/* open a client connection to the JACK server */
 
@@ -36,105 +44,128 @@ bool Jack::connect() {
 		std::cerr << "unique name " << client_name << " assigned" << std::endl;
 	}
 
-	/* tell the JACK server to call `process()' whenever
-	   there is work to be done.
-	*/
+	/* register callbacks */
+	jack_set_process_callback(client, jack_process_cb, this);
+	jack_set_buffer_size_callback(client, jack_bufsize_cb, this);
+	
+	jack_on_shutdown(client, jack_shutdown_cb, this);
 
-	jack_set_process_callback (client, jack_process_cb, 0);
 
-	/* tell the JACK server to call `jack_shutdown()' if
-	   it ever shuts down, either entirely, or if it
-	   just decides to stop calling us.
-	*/
-
-	jack_on_shutdown (client, jack_shutdown_cb, 0);
-
-	/* display the current sample rate. 
-	 */
-
-	//std::cout << "engine sample rate: " << jack_get_sample_rate (client) << std::endl;
-		
-
-	/* create two ports */
-
+	/* create audio ports */
 	input_port = jack_port_register (client, input_port_name.c_str(),
-					 JACK_DEFAULT_AUDIO_TYPE,
-					 JackPortIsInput, 0);
+					JACK_DEFAULT_AUDIO_TYPE,
+					JackPortIsInput, 0);
 	
 	output_port = jack_port_register (client, output_port_name.c_str(),
-					  JACK_DEFAULT_AUDIO_TYPE,
-					  JackPortIsOutput, 0);
+					JACK_DEFAULT_AUDIO_TYPE,
+					JackPortIsOutput, 0);
 	
-	if ((input_port == NULL) || (output_port == NULL)) {
-		std::cerr << "no more JACK ports available" << std::endl;
-		return false;
-	}
-
-	/* Tell the JACK server that we are ready to roll.  Our
-	 * process() callback will start running now. */
-
-	if (jack_activate (client)) {
-		std::cerr << "cannot activate client" << std::endl;
+	if ((output_port == NULL)) {// || (input_port == NULL)) {
+		std::cerr << "unable to register jack audio ports" << std::endl;
 		return false;
 	}
 	
-
-	/* Connect the ports.  You can't do this before the client is
-	 * activated, because we can't make connections to clients
-	 * that aren't running.  Note the confusing (but necessary)
-	 * orientation of the driver backend ports: playback ports are
-	 * "input" to the backend, and capture ports are "output" from
-	 * it.
-	 */
-	/*
-	ports = jack_get_ports (client, NULL, NULL,
-				JackPortIsPhysical|JackPortIsOutput);
-	if (ports == NULL) {
-		fprintf(stderr,"no physical capture ports\n");
-		exit (1);
+	/* create midi ports */  
+	input_midi_port = jack_port_register (client, input_midi_port_name.c_str(),
+					JACK_DEFAULT_MIDI_TYPE,
+					JackPortIsInput, 0);
+	
+	output_midi_port = jack_port_register (client, output_midi_port_name.c_str(),
+					JACK_DEFAULT_MIDI_TYPE,
+					JackPortIsOutput, 0);
+	
+	if ((input_midi_port == NULL) ){//|| (output_midi_port == NULL)) {
+		std::cerr << "unable to register jack midi ports" << std::endl;
+		return false;
 	}
 	
-	if (jack_connect (client, ports[0], jack_port_name (input_port))) {
-		fprintf(stderr,"cannot connect input ports\n");
-	}
-
-	free (ports);
-	*/
-	/*
-	ports = jack_get_ports (client, NULL, NULL,
-				JackPortIsPhysical|JackPortIsInput);
-	if (ports == NULL) {
-		fprintf(stderr, "no physical playback ports\n");
-		exit (1);
-	}
-	
-	if (jack_connect (client, jack_port_name (output_port), ports[0])) {
-		fprintf (stderr, "cannot connect output ports\n");
-	}
-	
-	free (ports);
-	*/
+	ready = true;
 
 	return true;
 }
 
-/* we call this when jack is closed on purpose*/
+bool Jack::start() {
+	/* start getting process call backs */
+	if (jack_activate (client)) {
+		std::cerr << "cannot activate client" << std::endl;
+		return false;
+	}
+
+	/* connect output port */
+	const char **ports;
+	
+	ports = jack_get_ports (client, NULL, NULL,
+				JackPortIsPhysical|JackPortIsInput);
+	if (ports == NULL) {
+		std::cerr << "no physical playback ports" << std::endl;
+		return false;
+	}
+	
+	if (jack_connect (client, jack_port_name (output_port), ports[0])) {
+		std::cerr << "cannot connect output port" << std::endl;
+	}
+	
+	delete ports;
+	
+	started = true;
+	
+	return true;
+}
+
+/* we call this when jack is closed on purpose */
 bool Jack::close() {
 	jack_client_close (client);
 	return true;
 }
 
-/**
- * The process callback for this JACK application is called in a
- * special realtime thread once for each audio cycle.
- *
- * This client follows a simple rule: when the JACK transport is
- * running, copy the input port to the output.  When it stops, exit.
- */
+/* process data to and from jack */
 int jack_process_cb (jack_nframes_t nframes, void *arg) {
-	//for now we do nothing
 	
+	Jack* jack = (Jack*) arg;
+	
+	/* audio */
+	jack_default_audio_sample_t *out =
+		(jack_default_audio_sample_t *) 
+			jack_port_get_buffer(jack->get_output_port(), nframes);
+	
+	for (uint f = 0; f < nframes ; f++) {
+		out[f] = 0.0f;
+	}
+	
+	server->get_frames(out, nframes);
+	
+	
+	/* midi */
+	void* port_buf = jack_port_get_buffer(jack->get_input_midi_port(), nframes);
+	jack_nframes_t event_count = jack_midi_get_event_count(port_buf);
+	jack_midi_event_t in_event;
+	
+	for (uint event = 0 ; event < event_count ; event++) {
+		jack_midi_event_get(&in_event, port_buf, event);
+		std::cout << "midi event " << std::hex 
+				<< (uint) in_event.buffer[0] << " "
+				<< (uint) in_event.buffer[1] << " "
+				<< (uint) in_event.buffer[2] << " "
+				<< (uint) in_event.buffer[3]
+				<< std::endl;
+		if (in_event.buffer[0] == 0x90) { /* note on */
+			server->midi_on(in_event.buffer[1],in_event.buffer[2]);
+		} else if(in_event.buffer[0] == 0x80) { /* note off */
+			server->midi_off(in_event.buffer[1]);
+		} else if (in_event.buffer[0] == 0xe0) {
+			server->pitch_bend(in_event.buffer[2]);
+		} else if (in_event.buffer[0] == 0xb0) {
+			server->controller_change(in_event.buffer[1],in_event.buffer[2]);
+		}
+	}
 	return 0;      
+}
+
+int jack_bufsize_cb(jack_nframes_t nframes, void *arg) {
+	
+	//Jack* jack = (Jack*) arg;
+	
+	return 0;
 }
 
 /**
@@ -142,5 +173,8 @@ int jack_process_cb (jack_nframes_t nframes, void *arg) {
  * decides to disconnect the client.
  */
 void jack_shutdown_cb (void *arg) {
+	
+	//Jack* jack = (Jack*) arg;
+	
 	//for now we do nothing
 }

@@ -8,11 +8,6 @@ class SoundMaker {
 		
 		virtual bool is_playing() =0;
 		virtual void next_frames(float frames[], int length) =0;
-		float next_frame() {
-			float data;
-			next_frames(&data,1);
-			return data;
-		}
 		
 		int id;
 		

@@ -3,26 +3,66 @@
 
 #include <sndfile.h>
 #include <string>
+#include <list>
+#include <map>
+#include <rubberband/RubberBandStretcher.h>
 
-class Sample
+#include "sound_maker.h"
+#include "pad.h"
+#include "event.h"
+
+class Sample : public SoundMaker
 {
-public:
-	Sample();
-	~Sample();
-	
-	bool load(std::string filename);
-	bool play();
-	bool stop();
+	private:
+		SNDFILE* file;
+		SF_INFO sfinfo;
+		
+		RubberBand::RubberBandStretcher* rubber_band;
+		
+		bool playing;
+		
+		int total_frames;
+		int sample_rate;
+		
+		std::list<int> pad_ids;
+		std::map<int,float> pads_to_positions;
+		
+		std::list<Event> events;
+		
+		std::string filename;
+		float stopping_at;
+		
+		float speed;
+		float pitch;
+		
+		bool try_add_event(Event e);
+		void blank(const float *const * frames, int length);
+		void print_events();
+	public:
+		Sample();
+		~Sample();
+		
+		bool load(std::string filename);
+		bool play();
+		bool play(float position);
+		bool give_event(Event e);
+		bool stop();
+		
+		bool is_playing();
+		void next_frames(float frames[], int length);
+		float next_frame();
 
-	bool operator==(const Sample &other) const;
-	Sample & operator=(const Sample &other);
-	
-	std::string filename;
-protected:
-
-private:
-	SNDFILE* file;
-
+		Sample & operator=(const Sample &other);
+		
+		std::string get_filename() { return filename; }
+		
+		std::list<int> get_pad_ids() { return pad_ids; }
+		
+		bool add_pad(int pad_id, float position);
+		bool remove_pad(int pad_id);
+		
+		void set_speed(float new_speed);
+		void set_pitch(float new_pitch);
 };
 
 #endif // _SAMPLE_H_

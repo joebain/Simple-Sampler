@@ -5,3 +5,7 @@ all:
 .PHONY: clean
 clean:
 	@cd build && $(MAKE) --no-print-directory clean
+
+.PHONY: run
+run:
+	@bin/simple-sampler
