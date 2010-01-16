@@ -14,6 +14,10 @@ public:
 
 protected:
 	Server* server;
+	
+	void load_pads(std::string filename);
+	bool load_samples(std::string filename);
+	bool load_sample(std::string filename);
 
 private:
 	

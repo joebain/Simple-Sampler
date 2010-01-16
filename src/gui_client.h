@@ -2,6 +2,7 @@
 #define _GUI_CLIENT_H_
 
 #include <list>
+#include <map>
 
 #include <gtkmm.h>
 
@@ -17,6 +18,8 @@ class GuiClient : public Client, public Gtk::Window {
 		
 		void refresh_pads();
 		
+		std::map<int,Pad*> pad_ids_to_pads;
+		
 		Gtk::Button add_sample_button;
 		Gtk::Button load_pad_config_button;
 		Gtk::Button test_button;
@@ -26,6 +29,8 @@ class GuiClient : public Client, public Gtk::Window {
 		Gtk::Paned v_paned;
 		Gtk::Table sample_table;
 		Gtk::HButtonBox button_box;
+		
+		SampleChoiceModel* choice_model;
 		
 		std::list<PadGui*> pad_guis;
 	public:

@@ -5,6 +5,7 @@
 #include <gtkmm.h>
 
 #include "pad_gui.h"
+#include "sample_choice_model.h"
 
 GuiClient::GuiClient(Server* server) : Client(server) {
 		
@@ -35,11 +36,12 @@ GuiClient::GuiClient(Server* server) : Client(server) {
 
 	scrolled_window.set_policy(Gtk::POLICY_AUTOMATIC, Gtk::POLICY_AUTOMATIC);
 
-	for (int i = 0; i < 100; i++)
-	message_window.get_buffer()->insert_at_cursor("hello\n");
-
 	//show everything
 	show_all_children();
+	
+	load_samples("data/samples.xml");
+	load_pads("data/controller.xml");
+	refresh_pads();
 }
 
 GuiClient::~GuiClient() {
@@ -48,6 +50,7 @@ GuiClient::~GuiClient() {
 		delete *pi;
 	}
 	pad_guis.clear();
+	delete choice_model;
 }
 
 void GuiClient::start() {
@@ -79,10 +82,9 @@ void GuiClient::on_load_pad_config_button_clicked() {
 	dialog.add_filter(any_filter);
 
 	if (dialog.run() == Gtk::RESPONSE_OK) {
-		std::list<Pad> pads;
-		Loader::load_controller_config(dialog.get_filename(),pads);
-		server->set_pads(pads);
+		load_pads(dialog.get_filename());
 		refresh_pads();
+		message_window.get_buffer()->insert_at_cursor("Loaded pads\n");
 	}
 }
 
@@ -111,26 +113,29 @@ void GuiClient::on_add_sample_button_clicked() {
 	dialog.add_filter(any_filter);
 
 	if (dialog.run() == Gtk::RESPONSE_OK) {
-		Sample sample;
-		if (Loader::load_sample(dialog.get_filename(), sample)) {
-			server->add_sample(sample);
+		if (load_sample(dialog.get_filename())) {
+			refresh_pads();
+			message_window.get_buffer()->insert_at_cursor("Loaded sample (" + dialog.get_filename() + ")\n");
 		}
 	}
 }
 
 void GuiClient::refresh_pads() {
-	std::list<Pad> & pads = server->get_pads();
-	
-	int i = 0, j = 0;
-	for (std::list<Pad>::iterator pi = pads.begin() ;
-			pi != pads.end() ; ++pi) {
+	if (pad_guis.empty()) {
+		std::list<Pad> & pads = server->get_pads();
+		choice_model = new SampleChoiceModel (server->get_samples());
+		for (std::list<Pad>::iterator pi = pads.begin() ;
+				pi != pads.end() ; ++pi) {
+			
+			PadGui* pad_gui = new PadGui(*pi, choice_model);
+			pad_guis.push_back(pad_gui);
+			int x = pi->get_x();
+			int y = pi->get_y();
+			sample_table.attach(*(pad_guis.back()),x,x+1,y,y+1);
+		}
 		
-		PadGui* pad_gui = new PadGui(*pi, server->get_samples());
-		pad_guis.push_back(pad_gui);
-		sample_table.attach(*(pad_guis.back()),i,i+1,j,j+1);
-		
-		++i;
+		show_all_children();
+	} else {
+		choice_model->set_samples(server->get_samples());
 	}
-		
-	show_all_children();
 }
