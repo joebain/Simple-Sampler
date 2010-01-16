@@ -125,7 +125,7 @@ void GuiClient::refresh_pads() {
 	for (std::list<Pad>::iterator pi = pads.begin() ;
 			pi != pads.end() ; ++pi) {
 		
-		PadGui* pad_gui = new PadGui(*pi);
+		PadGui* pad_gui = new PadGui(*pi, server->get_samples());
 		pad_guis.push_back(pad_gui);
 		sample_table.attach(*(pad_guis.back()),i,i+1,j,j+1);
 		

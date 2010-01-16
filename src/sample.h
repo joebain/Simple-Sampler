@@ -30,6 +30,7 @@ class Sample : public SoundMaker
 		std::list<Event> events;
 		
 		std::string filename;
+		std::string name;
 		float stopping_at;
 		
 		float base_speed;
@@ -57,6 +58,13 @@ class Sample : public SoundMaker
 		Sample & operator=(const Sample &other);
 		
 		std::string get_filename() { return filename; }
+		std::string get_name() {
+			if (!name.empty()) return name;
+			int start_pos = filename.find_last_of("/\\");
+			int end_pos = filename.rfind('.');
+			name = filename.substr(start_pos+1,end_pos - start_pos - 1);
+			return name;
+		}
 		
 		std::list<int> get_pad_ids() { return pad_ids; }
 		

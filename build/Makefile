@@ -10,7 +10,8 @@ MAIN_EXE := $(BIN_DIR)/simple-sampler
 MAIN_OBJ := $(BIN_DIR)/libsimple-sampler.a
 
 .PHONY: all
-all: $(MAIN_OBJ) $(MAIN_EXE)
+all: $(MAIN_EXE)
+#all: $(MAIN_EXE) $(MAIN_OBJ)
 
 CCFLAGS := $(COMMON_CCFLAGS) `pkg-config --cflags jack sndfile libxml++-2.6 rubberband gtkmm-2.4`
 LIBS := `pkg-config --libs jack sndfile libxml++-2.6 rubberband gtkmm-2.4` -lm

@@ -42,6 +42,8 @@ bool Server::add_sample(Sample sample) {
 		pads_to_samples[*pad_id] = &(samples.back());
 		++pad_id;
 	}
+	sample_ptrs.push_back(&(samples.back()));
+
 	std::cout << "added a sample, name: " << sample.get_filename() << std::endl;
 		
 	return add_sound_maker(&samples.back());

@@ -20,6 +20,7 @@ class Server {
 		std::list<SoundMaker*> sound_makers;
 		std::list<Synth> synths;
 		std::list<Sample> samples;
+		std::list<Sample*> sample_ptrs;
 		
 		Sample* last_played_or_playing;
 		
@@ -47,6 +48,7 @@ class Server {
 
 		bool add_sample(Sample sample);
 		bool add_samples(std::list<Sample> sample);
+		std::list<Sample> & get_samples() { return samples; }
 		bool remove_sample(Sample sample);
 		
 		SoundMaker* get_sound_maker(int id);
