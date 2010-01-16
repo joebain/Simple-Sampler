@@ -12,8 +12,8 @@ MAIN_OBJ := $(BIN_DIR)/libsimple-sampler.a
 .PHONY: all
 all: $(MAIN_OBJ) $(MAIN_EXE)
 
-CCFLAGS := $(COMMON_CCFLAGS)
-LIBS := `pkg-config --cflags --libs jack sndfile libxml++-2.6 rubberband` -lm
+CCFLAGS := $(COMMON_CCFLAGS) `pkg-config --cflags jack sndfile libxml++-2.6 rubberband gtkmm-2.4`
+LIBS := `pkg-config --libs jack sndfile libxml++-2.6 rubberband gtkmm-2.4` -lm
 
 SRC_FILES := $(wildcard $(SRC_DIR)/*.cc)
 OBJECT_FILES := $(notdir $(SRC_FILES:.cc=.o))

@@ -14,6 +14,7 @@ class Loader
 	private:
 		static std::string get_attribute(xmlpp::Node* node, std::string name);
 	public:
+		static bool load_sample(std::string, Sample& sample);
 		static int load_samples_from_file(std::string filename, std::list<Sample> & samples);
 		static bool save_sample_file(std::string filename, std::list<Sample> samples);
 		static int load_controller_config(std::string filename, std::list<Pad> & pads);

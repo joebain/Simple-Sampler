@@ -56,6 +56,10 @@ int Loader::load_samples_from_file(std::string filename, std::list<Sample> & sam
 	return samples.size();
 }
 
+bool Loader::load_sample(std::string filename, Sample& sample) {
+	return sample.load(filename);
+}
+
 bool Loader::save_sample_file(std::string filename, std::list<Sample> samples) {
 	return true;
 }

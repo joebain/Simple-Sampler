@@ -13,11 +13,15 @@
 
 class Server {
 	private:
+		bool running;
+	
 		Jack* jack;
 
 		std::list<SoundMaker*> sound_makers;
 		std::list<Synth> synths;
 		std::list<Sample> samples;
+		
+		Sample* last_played_or_playing;
 		
 		std::list<Pad> pads;
 		
@@ -34,7 +38,7 @@ class Server {
 		
 		void midi_on(int event_number, int velocity);
 		void midi_off(int event_number);
-		void pitch_bend(int value);
+		void pitch_bend(int on, int value);
 		void controller_change(int controller_number, int value);
 		
 		Jack* get_jack() {return jack;}
@@ -51,6 +55,7 @@ class Server {
 		bool remove_synth(Synth synth);
 		
 		void set_pads(std::list<Pad> pads);
+		std::list<Pad> & get_pads() { return pads; }
 };
 
 #endif

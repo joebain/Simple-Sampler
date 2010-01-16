@@ -11,6 +11,7 @@ Client::Client(Server* server) {
 }
 
 void Client::start() {
+	/*
 	std::list<Sample> samples;
 	Loader::load_samples_from_file("data/samples.xml",samples);
 	server->add_samples(samples);
@@ -21,7 +22,7 @@ void Client::start() {
 	std::list<Pad> pads;
 	Loader::load_controller_config("data/controller.xml",pads);
 	server->set_pads(pads);
-	
+	*/
 	while (!server->get_jack()->is_ready()) {
 		sleep(0.2);
 	}
@@ -32,9 +33,9 @@ void Client::start() {
 	//sample->play();
 	//synth->play();
 	
-	while(true) {
-		sleep(1);
-	}
+	//~ while(true) {
+		//~ sleep(1);
+	//~ }
 }
 
 void Client:: stop() {

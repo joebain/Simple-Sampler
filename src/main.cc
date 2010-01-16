@@ -3,9 +3,13 @@
 #include <pthread.h>
 #include <iostream>
 #include <stdlib.h>
+#include <string>
+
+#include <gtkmm.h>
 
 #include "server.h"
 #include "client.h"
+#include "gui_client.h"
 
 Client* client;
 Server* server;
@@ -24,7 +28,16 @@ void* start_client(void* args) {
 
 int main (int argc, char *argv[]) {
 	server = new Server();
-	client = new Client(server);
+	
+	Gtk::RC::add_default_file("data/themes/Elegant Brit/gtk-2.0/gtkrc");
+	
+	Gtk::Main kit(argc, argv);
+	
+	//Glib::RefPtr<Gtk::Settings> settings = Gtk::Settings::get_default();
+	//Glib::PropertyProxy<Glib::ustring> theme = settings->property_gtk_theme_name();
+	//theme.set_value("Crux");
+	
+	client = new GuiClient(server);
 
 	pthread_t thread1, thread2;
 

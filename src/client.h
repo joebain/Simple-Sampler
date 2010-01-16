@@ -8,13 +8,15 @@ class Client
 public:
 	Client(Server* server);
 
-	void start();
-	void stop();
-	void update();
+	virtual void start();
+	virtual void stop();
+	virtual void update();
+
 protected:
+	Server* server;
 
 private:
-	Server* server;
+	
 };
 
 #endif // _CLIENT_H_

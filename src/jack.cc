@@ -142,18 +142,24 @@ int jack_process_cb (jack_nframes_t nframes, void *arg) {
 	
 	for (uint event = 0 ; event < event_count ; event++) {
 		jack_midi_event_get(&in_event, port_buf, event);
-		std::cout << "midi event " << std::hex 
-				<< (uint) in_event.buffer[0] << " "
-				<< (uint) in_event.buffer[1] << " "
-				<< (uint) in_event.buffer[2] << " "
-				<< (uint) in_event.buffer[3]
-				<< std::endl;
+		//~ std::cout << "midi event " << std::hex 
+				//~ << (uint) in_event.buffer[0] << " "
+				//~ << (uint) in_event.buffer[1] << " "
+				//~ << (uint) in_event.buffer[2] << " "
+				//~ << (uint) in_event.buffer[3]
+				//~ << std::endl;
 		if (in_event.buffer[0] == 0x90) { /* note on */
 			server->midi_on(in_event.buffer[1],in_event.buffer[2]);
 		} else if(in_event.buffer[0] == 0x80) { /* note off */
 			server->midi_off(in_event.buffer[1]);
 		} else if (in_event.buffer[0] == 0xe0) {
-			server->pitch_bend(in_event.buffer[2]);
+			server->pitch_bend(in_event.buffer[1], in_event.buffer[2]);
+			std::cout << "midi event " << std::hex 
+				<< (uint) in_event.buffer[0] << " "
+				<< (uint) in_event.buffer[1] << " "
+				<< (uint) in_event.buffer[2] << " "
+				<< (uint) in_event.buffer[3]
+				<< std::endl;
 		} else if (in_event.buffer[0] == 0xb0) {
 			server->controller_change(in_event.buffer[1],in_event.buffer[2]);
 		}

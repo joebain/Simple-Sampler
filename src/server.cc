@@ -17,7 +17,9 @@ Server::~Server() {
 bool Server::start() {
 	jack->connect();
 	
-	while (true) {
+	running = true;
+	
+	while (running) {
 		sleep(1);
 	}
 	
@@ -25,6 +27,8 @@ bool Server::start() {
 }
 
 bool Server::stop() {
+	running = false;
+	
 	jack->close();
 
 	return true;
@@ -183,6 +187,7 @@ void Server::midi_on(int event_number, int velocity) {
 		return;
 		
 	si->second->give_event(e);
+	last_played_or_playing = si->second;
 }
 
 void Server::midi_off(int event_number) {
@@ -207,23 +212,24 @@ void Server::midi_off(int event_number) {
 	si->second->give_event(e);
 }
 
-void Server::pitch_bend(int value) {
+void Server::pitch_bend(int on, int value) {
 	float pitch = (float) (value+1) / 64.0f; //we can't set the pitch to 0 anyway
 	std::cout << "pitch bend, val " << std::dec << value << " or " << pitch << std::endl;
-	
-	for (std::list<Sample>::iterator si = samples.begin() ;
-			si != samples.end() ; ++si) {
-		si->set_pitch(pitch);
+	if (last_played_or_playing) {
+		if (on)
+			last_played_or_playing->set_pitch(pitch);
+		else
+			last_played_or_playing->reset_pitch();
 	}
 }
 
 void Server::controller_change(int controller_number, int value) {
 	float speed = (float) (value+1) / 64.0f;
-	std::cout << "speed bend, val " << std::dec << value << " or " << speed << std::endl;
-	for (std::list<Sample>::iterator si = samples.begin() ;
-			si != samples.end() ; ++si) {
-		si->set_speed((float)value / 127.0f);
-	}
+	//std::cout << "speed bend, val " << std::dec << value << " or " << speed << std::endl;
+	/*
+	if (last_played_or_playing)
+		last_played_or_playing->set_speed(speed);
+	*/
 }
 
 void Server::set_pads(std::list<Pad> new_pads) {

@@ -32,8 +32,10 @@ class Sample : public SoundMaker
 		std::string filename;
 		float stopping_at;
 		
-		float speed;
-		float pitch;
+		float base_speed;
+		float playing_speed;
+		float base_pitch;
+		float playing_pitch;
 		
 		bool try_add_event(Event e);
 		void blank(const float *const * frames, int length);
@@ -62,7 +64,9 @@ class Sample : public SoundMaker
 		bool remove_pad(int pad_id);
 		
 		void set_speed(float new_speed);
+		void reset_speed();
 		void set_pitch(float new_pitch);
+		void reset_pitch();
 };
 
 #endif // _SAMPLE_H_

@@ -11,8 +11,10 @@ Sample::Sample() {
 	filename = "";
 	playing = false;
 	stopping_at = 1.0;
-	speed = 1.0;
-	pitch = 1.0;
+	base_speed = 1.0;
+	playing_speed = 1.0;
+	base_pitch = 1.0;
+	playing_pitch = 1.0;
 }
 
 bool Sample::load(std::string filename)
@@ -31,7 +33,9 @@ bool Sample::load(std::string filename)
 	sample_rate = sfinfo.samplerate;
 	
 	rubber_band = new RubberBand::RubberBandStretcher(sample_rate, 1/*channels*/,
-			RubberBand::RubberBandStretcher::OptionProcessRealTime);
+			RubberBand::RubberBandStretcher::OptionProcessRealTime |
+			RubberBand::RubberBandStretcher::OptionWindowLong );
+	//rubber_band->setDebugLevel(3);
 	
 	return true;
 }
@@ -131,13 +135,21 @@ Sample & Sample::operator=(const Sample &other) {
 }
 
 void Sample::set_speed(float new_speed) {
-	speed = new_speed;
+	playing_speed = new_speed;
 	rubber_band->setTimeRatio(new_speed);
 }
 
+void Sample::reset_speed() {
+	set_speed(base_speed);
+}
+
 void Sample::set_pitch(float new_pitch) {
-	pitch = new_pitch;
+	playing_pitch = new_pitch;
 	rubber_band->setPitchScale(new_pitch);
+}
+
+void Sample::reset_pitch() {
+	set_pitch(base_pitch);
 }
 
 void Sample::next_frames(float frames[], int length) {
