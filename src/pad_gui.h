@@ -24,8 +24,9 @@ class PadGui : public Gtk::Table {
 		PadGui(Pad& pad, SampleChoiceModel* choice_model);
 		void on_sample_choice_changed();
 		void on_play_button_clicked();
+		void on_position_spinner_changed();
 
-		
+		void refresh();
 };
 
 #endif

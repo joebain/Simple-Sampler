@@ -123,18 +123,6 @@ int jack_process_cb (jack_nframes_t nframes, void *arg) {
 	
 	Jack* jack = (Jack*) arg;
 	
-	/* audio */
-	jack_default_audio_sample_t *out =
-		(jack_default_audio_sample_t *) 
-			jack_port_get_buffer(jack->get_output_port(), nframes);
-	
-	for (uint f = 0; f < nframes ; f++) {
-		out[f] = 0.0f;
-	}
-	
-	server->get_frames(out, nframes);
-	
-	
 	/* midi */
 	void* port_buf = jack_port_get_buffer(jack->get_input_midi_port(), nframes);
 	jack_nframes_t event_count = jack_midi_get_event_count(port_buf);
@@ -158,6 +146,18 @@ int jack_process_cb (jack_nframes_t nframes, void *arg) {
 			server->controller_change(in_event.buffer[1],in_event.buffer[2]);
 		}
 	}
+	
+	/* audio */
+	jack_default_audio_sample_t *out =
+		(jack_default_audio_sample_t *) 
+			jack_port_get_buffer(jack->get_output_port(), nframes);
+	
+	for (uint f = 0; f < nframes ; f++) {
+		out[f] = 0.0f;
+	}
+	
+	server->get_frames(out, nframes);
+	
 	return 0;      
 }
 

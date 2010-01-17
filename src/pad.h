@@ -12,6 +12,8 @@ class Pad {
 		int id;
 		
 		int x,y;
+		
+		bool has_a_sample; //for some reason the sample is not == NULL when we haven't set it
 	public:
 		Pad() { Pad(0,0); }
 		Pad(int event_number, int id);
@@ -24,9 +26,13 @@ class Pad {
 		int get_x() { return x; }
 		int get_y() { return y; }
 		
-		void set_sample(Sample* sample) { this->sample = sample; }
+		void set_sample(Sample* sample) {
+			this->sample = sample;
+			has_a_sample = true;
+		}
 		Sample* get_sample() { return sample; }
 		void set_position(float position) { this->position = position; }
+		float get_position() { return position; }
 		void hit(float velocity);
 		void release();
 };

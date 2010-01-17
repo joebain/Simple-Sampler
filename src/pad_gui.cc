@@ -4,8 +4,8 @@
 
 PadGui::PadGui(Pad& pad, SampleChoiceModel* choice_model) :
 	Gtk::Table(2,2) , pad(pad),
-	position_spinner_adjustment(0.0, 0.0, 1.0, 0.05, 0.25, 0.25),
-  	position_spinner(position_spinner_adjustment)
+	position_spinner_adjustment(0.0, 0.0, 1.0, 0.05, 0.25, 0),
+  	position_spinner(position_spinner_adjustment,0.2,2)
 {
 	this->choice_model = choice_model;
 	
@@ -28,16 +28,12 @@ PadGui::PadGui(Pad& pad, SampleChoiceModel* choice_model) :
 			sigc::mem_fun(*this, &PadGui::on_sample_choice_changed)
 			);
 	
-	Gtk::TreeNodeChildren kids = sample_choice.get_model()->children();
-	for (Gtk::TreeModel::iterator ci = kids.begin() ;
-			ci != kids.end() ; ++ci) {
-		Gtk::TreeModel::Row row = *ci;
-		if (row[choice_model->sample_column] == pad.get_sample()) {
-			sample_choice.set_active(ci);
-			break;
-		}	
-	}
-
+	//position spinner
+	position_spinner_adjustment.signal_value_changed().connect(
+			sigc::mem_fun(*this, &PadGui::on_position_spinner_changed)
+			);
+			
+	refresh();
 }
 
 void PadGui::on_sample_choice_changed() {
@@ -45,10 +41,10 @@ void PadGui::on_sample_choice_changed() {
 	if(iter) {
 		Gtk::TreeModel::Row row = *iter;
 		if(row)	{
-			//int id = row[choice_model->id_column];
 			Glib::ustring name = row[choice_model->name_column];
-
 			std::cout << "sample chosen is " << name << std::endl;
+			
+			pad.set_sample(row[choice_model->sample_column]);
 		}
 	} else {
 		std::cout << "no selection" << std::endl;
@@ -58,4 +54,24 @@ void PadGui::on_sample_choice_changed() {
 void PadGui::on_play_button_clicked() {
 	std::cout << "play clicked" << std::endl;
 	pad.hit(1.0);
-}	
+	pad.release();
+}
+
+void PadGui::on_position_spinner_changed() {
+	std::cout << "position changed to " << position_spinner.get_value() << std::endl;
+	pad.set_position(position_spinner.get_value());
+}
+
+void PadGui::refresh() {
+	Gtk::TreeNodeChildren kids = sample_choice.get_model()->children();
+	for (Gtk::TreeModel::iterator ci = kids.begin() ;
+			ci != kids.end() ; ++ci) {
+		Gtk::TreeModel::Row row = *ci;
+		if (row[choice_model->sample_column] == pad.get_sample()) {
+			sample_choice.set_active(ci);
+			break;
+		}	
+	}
+	
+	position_spinner.set_value(pad.get_position());
+}

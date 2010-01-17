@@ -46,38 +46,36 @@ bool Sample::play() {
 
 bool Sample::play(float position)
 {	
-	playing = true;
-	
-	std::cout << "playing sample " << filename << std::endl;
-	
 	int pos = (int) (total_frames * position + 0.5);
-	
 	sf_seek(file, pos, SEEK_SET);
+	
+	reset_required = true;
+	
+	playing = true;
 	
 	return true;
 }
 
 bool Sample::give_event(PadEvent e)
 {
-	std::cout << "got event " << e.pad_id << std::endl;
-	std::cout << "at sample " << name << std::endl;
-	
-	//e.position = pads_to_positions[e.pad_id];
-	
 	if (e.on) {
 		if (events.size() >= 1) {
 			PadEvent old_front = events.front();
 			if (try_add_event(e)) {
 				stopping_at = events.back().position;
-				if (events.front().pad_id != old_front.pad_id)
-					return play(events.front().position);	
+				if (events.front().pad_id != old_front.pad_id) {
+					print_events();
+					return play(events.front().position);
+				}
 			} else {
 				stopping_at = 1.0f;
+				print_events();
 				return play(e.position);
 			}
 		} else {
 			events.push_back(e);
 			stopping_at = 1.0f;
+			print_events();
 			return play(e.position);
 		}
 	} else {
@@ -166,6 +164,10 @@ void Sample::next_frames(float frames[], int length) {
 				return;
 			}
 		}
+		if (reset_required) {
+			rubber_band->reset();
+			reset_required = false;
+		}
 		while(rubber_band->available() < length) {
 			int frames_needed_by_rb = rubber_band->getSamplesRequired();
 			int frames_to_give_to_rb = length < frames_needed_by_rb ? length : frames_needed_by_rb;
@@ -214,6 +216,6 @@ void Sample::print_events() {
 	std::cout << "events:" << std::endl;
 	for (std::list<PadEvent>::iterator ei = events.begin() ;
 			ei != events.end() ; ++ei) {
-		std::cout << "		pad no " << ei->pad_id << std::endl;
+		std::cout << "		pos " << ei->position << " @ " << name << std::endl;
 	}
 }

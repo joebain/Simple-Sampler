@@ -35,6 +35,8 @@ GuiClient::GuiClient(Server* server) : Client(server) {
               &GuiClient::on_load_pad_config_button_clicked));
 
 	scrolled_window.set_policy(Gtk::POLICY_AUTOMATIC, Gtk::POLICY_AUTOMATIC);
+	
+	sample_table.set_spacings(10);
 
 	//show everything
 	show_all_children();
@@ -138,6 +140,10 @@ void GuiClient::refresh_pads() {
 		show_all_children();
 	} else {
 		choice_model->set_samples(server->get_samples());
+		for (std::list<PadGui*>::iterator pi = pad_guis.begin() ;
+				pi != pad_guis.end() ; ++pi) {
+			(*pi)->refresh();		
+		}
 	}
 }
 

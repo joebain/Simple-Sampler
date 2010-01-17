@@ -16,7 +16,7 @@ Server::~Server() {
 
 bool Server::start() {
 	jack->connect();
-	
+	working_frames = new float[jack->buffer_size()];
 	running = true;
 	
 	while (running) {
@@ -30,29 +30,21 @@ bool Server::stop() {
 	running = false;
 	
 	jack->close();
+	
+	delete working_frames;
 
 	return true;
 }
 
 bool Server::add_sample(Sample sample) {
 	samples.push_back(sample);
-	/*
-	std::list<int> pad_ids = sample.get_pad_ids();
-	std::list<int>::iterator pad_id = pad_ids.begin();
-	while (pad_id != pad_ids.end()) {
-		pads_to_samples[*pad_id] = &(samples.back());
-		++pad_id;
-	}
-	*/
-	//sample_ptrs.push_back(&(samples.back()));
-
+	
 	std::cout << "added a sample, name: " << sample.get_filename() << std::endl;
 		
 	return add_sound_maker(&samples.back());
 }
 
 bool Server::add_sound_maker(SoundMaker* sound_maker) {
-	//sound_maker->id = sound_makers.size();
 	sound_makers.push_back(sound_maker);
 	
 	std::cout << "added a sound maker, id: " << sound_maker->id << std::endl;
@@ -92,18 +84,7 @@ bool Server::remove_sound_maker(SoundMaker* sound_maker) {
 
 bool Server::remove_sample(Sample sample) {
 	uint size = sound_makers.size();
-	/*
-	//remove from pads to samples map
-	std::map<int,Sample*>::iterator p2s = pads_to_samples.begin();
-	while (p2s != pads_to_samples.end()) {
-		if (p2s->second->equal(&sample)) {
-			pads_to_samples.erase(p2s);
-			break;
-		}
-		++p2s;
-	}
-	*/
-	//remove from samples list
+	
 	std::list<Sample>::iterator s = samples.begin();
 	while (s != samples.end()) {
 		if (s->equal(&sample)) {
@@ -147,16 +128,20 @@ bool Server::remove_synth(Synth synth) {
 
 void Server::get_frames(float frames[], int length) {
 	
-	std::list<SoundMaker*>::iterator sound_maker = sound_makers.begin();
-	float gotten_frames[length];
-	while (sound_maker != sound_makers.end()) {
+	if (working_frames == NULL) return;
+	
+	for (int i = 0; i < length ; i++) {
+		working_frames[i] = 0.0f;
+	}
+		
+	for (std::list<SoundMaker*>::iterator sound_maker = sound_makers.begin() ;
+			sound_maker != sound_makers.end() ; ++sound_maker) {
 		if ((*sound_maker)->is_playing()) {
-			(*sound_maker)->next_frames(gotten_frames, length);
+			(*sound_maker)->next_frames(working_frames, length);
 			for (int a = 0; a < length ; a++) {
-				frames[a] += gotten_frames[a];
+				frames[a] += working_frames[a];
 			}	
 		}
-		++sound_maker;
 	}
 }
 
@@ -226,6 +211,7 @@ void Server::midi_off(int event_number) {
 void Server::pitch_bend(int on, int value) {
 	float pitch = (float) (value+1) / 64.0f; //we can't set the pitch to 0 anyway
 	std::cout << "pitch bend, val " << std::dec << value << " or " << pitch << std::endl;
+	if (pitch <= 0.1f) pitch = 0.1f; //crash if we go too low
 	if (last_played_or_playing) {
 		if (on)
 			last_played_or_playing->set_pitch(pitch);

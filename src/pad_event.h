@@ -7,8 +7,6 @@ class PadEvent {
 		int velocity;
 		bool on;
 		float position;
-
-		//static bool sort(PadEvent a, PadEvent b);
 };
 
 #endif

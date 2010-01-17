@@ -17,17 +17,16 @@ class Server {
 	
 		Jack* jack;
 
+		float* working_frames;
+
 		std::list<SoundMaker*> sound_makers;
 		std::list<Synth> synths;
 		std::list<Sample> samples;
-		//std::list<Sample*> sample_ptrs;
 		
 		Sample* last_played_or_playing;
 		
 		std::list<Pad> pads;
-		
 		std::map<int, Pad*> events_to_pads;
-		//std::map<int, Sample*> pads_to_samples;
 		
 		bool remove_sound_maker(SoundMaker* sound_maker);
 		bool add_sound_maker(SoundMaker* sound_maker);

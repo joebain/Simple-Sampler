@@ -44,6 +44,8 @@ class Sample : public SoundMaker
 		bool play();
 		bool play(float position);
 		bool stop();
+		
+		bool reset_required;
 	public:
 		Sample();
 		~Sample();
