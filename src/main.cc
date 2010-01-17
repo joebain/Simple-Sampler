@@ -29,16 +29,15 @@ void* start_client(void* args) {
 int main (int argc, char *argv[]) {
 	server = new Server();
 	
-	Gtk::RC::add_default_file("data/themes/Elegant Brit/gtk-2.0/gtkrc");
+	//client = new Client(server);
 	
+	//for some reason it doesn't work calling init_gtk ??
+	//GuiClient::init_gtk(argc, argv);
+	Gtk::RC::add_default_file("data/themes/Elegant Brit/gtk-2.0/gtkrc");
 	Gtk::Main kit(argc, argv);
 	
-	//Glib::RefPtr<Gtk::Settings> settings = Gtk::Settings::get_default();
-	//Glib::PropertyProxy<Glib::ustring> theme = settings->property_gtk_theme_name();
-	//theme.set_value("Crux");
-	
 	client = new GuiClient(server);
-
+	
 	pthread_t thread1, thread2;
 
 	pthread_create( &thread1, NULL, start_server, NULL);

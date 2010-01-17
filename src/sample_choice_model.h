@@ -13,10 +13,11 @@ class SampleChoiceModel : public Gtk::TreeModel::ColumnRecord {
 		
 		Glib::RefPtr<Gtk::ListStore> ref_tree_model;
 		
-		Gtk::TreeModelColumn<int> id_column;
+		Gtk::TreeModelColumn<Sample*> sample_column;
 		Gtk::TreeModelColumn<Glib::ustring> name_column;
 		
 		void set_samples(std::list<Sample> & samples);
+		void add_sample(Sample* sample);
 };
 
 

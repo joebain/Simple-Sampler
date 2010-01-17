@@ -8,8 +8,7 @@
 #include <rubberband/RubberBandStretcher.h>
 
 #include "sound_maker.h"
-#include "pad.h"
-#include "event.h"
+#include "pad_event.h"
 
 class Sample : public SoundMaker
 {
@@ -24,10 +23,10 @@ class Sample : public SoundMaker
 		int total_frames;
 		int sample_rate;
 		
-		std::list<int> pad_ids;
-		std::map<int,float> pads_to_positions;
+		//std::list<int> pad_ids;
+		//std::map<int,float> pads_to_positions;
 		
-		std::list<Event> events;
+		std::list<PadEvent> events;
 		
 		std::string filename;
 		std::string name;
@@ -38,19 +37,21 @@ class Sample : public SoundMaker
 		float base_pitch;
 		float playing_pitch;
 		
-		bool try_add_event(Event e);
+		bool try_add_event(PadEvent e);
 		void blank(const float *const * frames, int length);
 		void print_events();
+		
+		bool play();
+		bool play(float position);
+		bool stop();
 	public:
 		Sample();
 		~Sample();
 		
 		bool load(std::string filename);
-		bool play();
-		bool play(float position);
-		bool give_event(Event e);
-		bool stop();
 		
+		bool give_event(PadEvent e);
+				
 		bool is_playing();
 		void next_frames(float frames[], int length);
 		float next_frame();
@@ -66,10 +67,10 @@ class Sample : public SoundMaker
 			return name;
 		}
 		
-		std::list<int> get_pad_ids() { return pad_ids; }
+		//std::list<int> get_pad_ids() { return pad_ids; }
 		
-		bool add_pad(int pad_id, float position);
-		bool remove_pad(int pad_id);
+		//bool add_pad(int pad_id, float position);
+		//bool remove_pad(int pad_id);
 		
 		void set_speed(float new_speed);
 		void reset_speed();

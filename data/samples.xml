@@ -1,16 +1,4 @@
 <samples>
-	<sample filename="lovedrops.wav">
-		<pad id="1" position="0.0f" />
-		<pad id="3" position="0.25f" />
-		<pad id="5" position="0.5f" />
-		<pad id="7" position="0.75f" />
-		<pad id="9" position="1.0f" />
-	</sample>
-	<sample filename="sexy_coffee_pot.wav">
-		<pad id="2" position="0.0f" />
-		<pad id="4" position="0.25f" />
-		<pad id="6" position="0.5f" />
-		<pad id="8" position="0.75f" />
-		<pad id="10" position="1.0f" />
-	</sample>
+	<sample filename="lovedrops.wav" id="1"></sample>
+	<sample filename="sexy_coffee_pot.wav" id="2"></sample>
 </samples>

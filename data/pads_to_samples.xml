@@ -1,0 +1,13 @@
+<pads_to_samples>
+	<pad id="1" position="0.0f" sample_id="1" />
+	<pad id="3" position="0.25f" sample_id="1" />
+	<pad id="5" position="0.5f" sample_id="1" />
+	<pad id="7" position="0.75f" sample_id="1" />
+	<pad id="9" position="1.0f" sample_id="1" />
+
+	<pad id="2" position="0.0f" sample_id="2" />
+	<pad id="4" position="0.25f" sample_id="2" />
+	<pad id="6" position="0.5f" sample_id="2" />
+	<pad id="8" position="0.75f" sample_id="2" />
+	<pad id="10" position="1.0f" sample_id="2" />
+</pads_to_samples>

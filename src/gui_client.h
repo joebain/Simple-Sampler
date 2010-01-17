@@ -18,8 +18,6 @@ class GuiClient : public Client, public Gtk::Window {
 		
 		void refresh_pads();
 		
-		std::map<int,Pad*> pad_ids_to_pads;
-		
 		Gtk::Button add_sample_button;
 		Gtk::Button load_pad_config_button;
 		Gtk::Button test_button;
@@ -38,6 +36,8 @@ class GuiClient : public Client, public Gtk::Window {
 		~GuiClient();
 		
 		void start();
+		
+		static void init_gtk(int argc, char *argv[]);
 	
 	protected:
 	  	

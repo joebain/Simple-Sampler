@@ -41,6 +41,7 @@ GuiClient::GuiClient(Server* server) : Client(server) {
 	
 	load_samples("data/samples.xml");
 	load_pads("data/controller.xml");
+	link_pads_to_samples("data/pads_to_samples.xml");
 	refresh_pads();
 }
 
@@ -138,4 +139,9 @@ void GuiClient::refresh_pads() {
 	} else {
 		choice_model->set_samples(server->get_samples());
 	}
+}
+
+void GuiClient::init_gtk(int argc, char *argv[]) {
+	Gtk::RC::add_default_file("data/themes/Elegant Brit/gtk-2.0/gtkrc");
+	Gtk::Main kit(argc, argv);
 }

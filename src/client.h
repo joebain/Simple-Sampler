@@ -18,6 +18,7 @@ protected:
 	void load_pads(std::string filename);
 	bool load_samples(std::string filename);
 	bool load_sample(std::string filename);
+	bool link_pads_to_samples(std::string filename);
 
 private:
 	

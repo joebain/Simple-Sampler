@@ -36,13 +36,15 @@ bool Server::stop() {
 
 bool Server::add_sample(Sample sample) {
 	samples.push_back(sample);
+	/*
 	std::list<int> pad_ids = sample.get_pad_ids();
 	std::list<int>::iterator pad_id = pad_ids.begin();
 	while (pad_id != pad_ids.end()) {
 		pads_to_samples[*pad_id] = &(samples.back());
 		++pad_id;
 	}
-	sample_ptrs.push_back(&(samples.back()));
+	*/
+	//sample_ptrs.push_back(&(samples.back()));
 
 	std::cout << "added a sample, name: " << sample.get_filename() << std::endl;
 		
@@ -50,7 +52,7 @@ bool Server::add_sample(Sample sample) {
 }
 
 bool Server::add_sound_maker(SoundMaker* sound_maker) {
-	sound_maker->id = sound_makers.size();
+	//sound_maker->id = sound_makers.size();
 	sound_makers.push_back(sound_maker);
 	
 	std::cout << "added a sound maker, id: " << sound_maker->id << std::endl;
@@ -90,7 +92,7 @@ bool Server::remove_sound_maker(SoundMaker* sound_maker) {
 
 bool Server::remove_sample(Sample sample) {
 	uint size = sound_makers.size();
-
+	/*
 	//remove from pads to samples map
 	std::map<int,Sample*>::iterator p2s = pads_to_samples.begin();
 	while (p2s != pads_to_samples.end()) {
@@ -100,7 +102,7 @@ bool Server::remove_sample(Sample sample) {
 		}
 		++p2s;
 	}
-
+	*/
 	//remove from samples list
 	std::list<Sample>::iterator s = samples.begin();
 	while (s != samples.end()) {
@@ -176,8 +178,10 @@ void Server::midi_on(int event_number, int velocity) {
 		return;
 	
 	Pad* pad = pi->second;
-	
-	Event e;
+	pad->hit(velocity);
+	last_played_or_playing = pad->get_sample();
+	/*
+	PadEvent e;
 	e.pad_id = pad->get_id();
 	e.velocity = velocity;
 	e.on = true;
@@ -187,9 +191,11 @@ void Server::midi_on(int event_number, int velocity) {
 	
 	if (si == pads_to_samples.end())
 		return;
-		
+	
 	si->second->give_event(e);
 	last_played_or_playing = si->second;
+	*/
+	
 }
 
 void Server::midi_off(int event_number) {
@@ -201,6 +207,8 @@ void Server::midi_off(int event_number) {
 	
 	Pad* pad = pi->second;
 	
+	pad->release();
+	/*
 	Event e;
 	e.pad_id = pad->get_id();
 	e.on = false;
@@ -212,6 +220,7 @@ void Server::midi_off(int event_number) {
 		return;
 		
 	si->second->give_event(e);
+	*/
 }
 
 void Server::pitch_bend(int on, int value) {
@@ -235,11 +244,14 @@ void Server::controller_change(int controller_number, int value) {
 }
 
 void Server::set_pads(std::list<Pad> new_pads) {
-	std::list<Pad>::iterator pad = new_pads.begin();
 	pads.clear();
-	while(pad != new_pads.end()) {
-		pads.push_back(*pad);
-		events_to_pads[pad->get_event_number()] = &(pads.back());
-		++pad;
+	for (std::list<Pad>::iterator pi = new_pads.begin() ;
+			pi != new_pads.end() ; ++pi) {
+		add_pad(*pi);
 	}
+}
+
+void Server::add_pad(Pad pad) {
+	pads.push_back(pad);
+	events_to_pads[pad.get_event_number()] = &(pads.back());
 }

@@ -59,3 +59,9 @@ bool Client::load_sample(std::string filename) {
 	if (!Loader::load_sample(filename, sample)) return false;
 	return server->add_sample(sample);
 }
+
+bool Client::link_pads_to_samples(std::string filename) {
+	std::list<Pad> & pads = server->get_pads();
+	std::list<Sample> & samples = server->get_samples();
+	return Loader::link_pads_to_samples(filename, pads, samples);
+}

@@ -9,7 +9,7 @@
 #include "sample.h"
 #include "synth.h"
 #include "loader.h"
-#include "event.h"
+#include "pad_event.h"
 
 class Server {
 	private:
@@ -20,14 +20,14 @@ class Server {
 		std::list<SoundMaker*> sound_makers;
 		std::list<Synth> synths;
 		std::list<Sample> samples;
-		std::list<Sample*> sample_ptrs;
+		//std::list<Sample*> sample_ptrs;
 		
 		Sample* last_played_or_playing;
 		
 		std::list<Pad> pads;
 		
 		std::map<int, Pad*> events_to_pads;
-		std::map<int, Sample*> pads_to_samples;
+		//std::map<int, Sample*> pads_to_samples;
 		
 		bool remove_sound_maker(SoundMaker* sound_maker);
 		bool add_sound_maker(SoundMaker* sound_maker);
@@ -57,6 +57,7 @@ class Server {
 		bool remove_synth(Synth synth);
 		
 		void set_pads(std::list<Pad> pads);
+		void add_pad(Pad pad);
 		std::list<Pad> & get_pads() { return pads; }
 };
 

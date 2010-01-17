@@ -23,11 +23,20 @@ PadGui::PadGui(Pad& pad, SampleChoiceModel* choice_model) :
 	sample_choice.set_model(choice_model->ref_tree_model);
 
 	//combo box
-	//sample_choice.pack_start(model_columns.col_id);
 	sample_choice.pack_start(choice_model->name_column);
 	sample_choice.signal_changed().connect(
 			sigc::mem_fun(*this, &PadGui::on_sample_choice_changed)
 			);
+	
+	Gtk::TreeNodeChildren kids = sample_choice.get_model()->children();
+	for (Gtk::TreeModel::iterator ci = kids.begin() ;
+			ci != kids.end() ; ++ci) {
+		Gtk::TreeModel::Row row = *ci;
+		if (row[choice_model->sample_column] == pad.get_sample()) {
+			sample_choice.set_active(ci);
+			break;
+		}	
+	}
 
 }
 
@@ -36,11 +45,10 @@ void PadGui::on_sample_choice_changed() {
 	if(iter) {
 		Gtk::TreeModel::Row row = *iter;
 		if(row)	{
-			int id = row[choice_model->id_column];
+			//int id = row[choice_model->id_column];
 			Glib::ustring name = row[choice_model->name_column];
 
-			std::cout << "sample chosen is " << name <<
-				" with id " << id << std::endl;
+			std::cout << "sample chosen is " << name << std::endl;
 		}
 	} else {
 		std::cout << "no selection" << std::endl;
@@ -49,4 +57,5 @@ void PadGui::on_sample_choice_changed() {
 
 void PadGui::on_play_button_clicked() {
 	std::cout << "play clicked" << std::endl;
-}
+	pad.hit(1.0);
+}	

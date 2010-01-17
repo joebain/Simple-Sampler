@@ -57,15 +57,16 @@ bool Sample::play(float position)
 	return true;
 }
 
-bool Sample::give_event(Event e)
+bool Sample::give_event(PadEvent e)
 {
 	std::cout << "got event " << e.pad_id << std::endl;
+	std::cout << "at sample " << name << std::endl;
 	
-	e.position = pads_to_positions[e.pad_id];
+	//e.position = pads_to_positions[e.pad_id];
 	
 	if (e.on) {
 		if (events.size() >= 1) {
-			Event old_front = events.front();
+			PadEvent old_front = events.front();
 			if (try_add_event(e)) {
 				stopping_at = events.back().position;
 				if (events.front().pad_id != old_front.pad_id)
@@ -80,7 +81,7 @@ bool Sample::give_event(Event e)
 			return play(e.position);
 		}
 	} else {
-		std::list<Event>::iterator ei = events.begin();
+		std::list<PadEvent>::iterator ei = events.begin();
 		while (ei != events.end()) {
 			if (ei->pad_id == e.pad_id) {
 				events.erase(ei);
@@ -94,8 +95,8 @@ bool Sample::give_event(Event e)
 	return false;
 }
 
-bool Sample::try_add_event(Event e) {
-	for (std::list<Event>::iterator ei = events.begin() ;
+bool Sample::try_add_event(PadEvent e) {
+	for (std::list<PadEvent>::iterator ei = events.begin() ;
 			ei != events.end() ; ++ei) {
 		if (ei->position > e.position) {
 			events.insert(ei,e);
@@ -188,7 +189,7 @@ void Sample::next_frames(float frames[], int length) {
 bool Sample::is_playing() {
 	return playing;
 }
-
+/*
 bool Sample::add_pad(int pad_id, float position) {
 	pad_ids.push_back(pad_id);
 	pads_to_positions[pad_id] = position;
@@ -208,10 +209,10 @@ bool Sample::remove_pad(int pad_id) {
 	
 	return false;
 }
-
+*/
 void Sample::print_events() {
 	std::cout << "events:" << std::endl;
-	for (std::list<Event>::iterator ei = events.begin() ;
+	for (std::list<PadEvent>::iterator ei = events.begin() ;
 			ei != events.end() ; ++ei) {
 		std::cout << "		pad no " << ei->pad_id << std::endl;
 	}
