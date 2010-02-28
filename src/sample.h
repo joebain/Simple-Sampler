@@ -19,6 +19,7 @@ class Sample : public SoundMaker
 		RubberBand::RubberBandStretcher* rubber_band;
 		
 		bool playing;
+		bool looping;
 		
 		int total_frames;
 		int sample_rate;
@@ -31,6 +32,7 @@ class Sample : public SoundMaker
 		std::string filename;
 		std::string name;
 		float stopping_at;
+		float last_play_from;
 		
 		float base_speed;
 		float playing_speed;
@@ -53,7 +55,9 @@ class Sample : public SoundMaker
 		bool load(std::string filename);
 		
 		bool give_event(PadEvent e);
-				
+		
+		void set_looping(bool looping) {this->looping = looping; }
+		bool is_looping() {return looping;}
 		bool is_playing();
 		void next_frames(float frames[], int length);
 		float next_frame();

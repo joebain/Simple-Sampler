@@ -15,8 +15,10 @@ class GuiClient : public Client, public Gtk::Window {
 	private:
 		void on_add_sample_button_clicked();
 		void on_load_pad_config_button_clicked();
+		void on_sample_is_looping_toogled(const Glib::ustring& path);
 		
-		void refresh_pads();
+		void init();
+		void refresh();
 		
 		Gtk::Button add_sample_button;
 		Gtk::Button load_pad_config_button;
@@ -27,6 +29,8 @@ class GuiClient : public Client, public Gtk::Window {
 		Gtk::Paned v_paned;
 		Gtk::Table sample_table;
 		Gtk::HButtonBox button_box;
+		Gtk::Frame sample_frame;
+		Gtk::TreeView sample_list_view;
 		
 		SampleChoiceModel* choice_model;
 		

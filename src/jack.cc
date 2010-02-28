@@ -49,7 +49,7 @@ bool Jack::connect() {
 	jack_set_buffer_size_callback(client, jack_bufsize_cb, this);
 	
 	jack_on_shutdown(client, jack_shutdown_cb, this);
-
+	jack_set_error_function(jack_error_cb);
 
 	/* create audio ports */
 	input_port = jack_port_register (client, input_port_name.c_str(),
@@ -177,4 +177,8 @@ void jack_shutdown_cb (void *arg) {
 	//Jack* jack = (Jack*) arg;
 	
 	//for now we do nothing
+}
+
+void jack_error_cb(const char* msg) {
+	std::cout << "jack error: " << msg << std::endl;
 }

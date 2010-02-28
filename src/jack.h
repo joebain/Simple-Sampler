@@ -41,5 +41,6 @@ class Jack {
 int jack_process_cb (jack_nframes_t nframes, void *arg);
 int jack_bufsize_cb(jack_nframes_t nframes, void *arg);
 void jack_shutdown_cb (void *arg);
+void jack_error_cb(const char* msg);
 
 #endif

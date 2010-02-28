@@ -10,7 +10,9 @@ Sample::Sample() {
 	file = 0;
 	filename = "";
 	playing = false;
+	looping = false;
 	stopping_at = 1.0;
+	last_play_from = 0.0;
 	base_speed = 1.0;
 	playing_speed = 1.0;
 	base_pitch = 1.0;
@@ -52,6 +54,7 @@ bool Sample::play(float position)
 	reset_required = true;
 	
 	playing = true;
+	last_play_from = position;
 	
 	return true;
 }
@@ -108,10 +111,14 @@ bool Sample::try_add_event(PadEvent e) {
 }
 
 bool Sample::stop()
-{
-	playing = false;
-	
-	std::cout << "stopped playing sample " << filename << std::endl;
+{	
+	if (!looping) {
+		playing = false;
+		std::cout << "stopped playing sample " << filename << std::endl;
+	} else {
+		play(last_play_from);
+		std::cout << "looped sample " << filename << std::endl;
+	}
 	
 	return true;
 }
@@ -160,7 +167,6 @@ void Sample::next_frames(float frames[], int length) {
 			float pos_f = (float)pos_i / (float)total_frames;
 			if (pos_f > stopping_at) {
 				stop();
-				stopping_at = 1.0;
 				return;
 			}
 		}
