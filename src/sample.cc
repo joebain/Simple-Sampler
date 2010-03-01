@@ -11,7 +11,10 @@ Sample::Sample() {
 	filename = "";
 	playing = false;
 	looping = false;
+	effect_on = false;
+	sticky_loops = false;
 	stopping_at = 1.0;
+	next_stop = 1.0;
 	last_play_from = 0.0;
 	base_speed = 1.0;
 	playing_speed = 1.0;
@@ -48,12 +51,28 @@ bool Sample::play() {
 
 bool Sample::play(float position)
 {	
+	if (position == 1.0) {
+		playing = false;
+		looping = false;
+		return false;
+	}
+	
+	if (sticky_loops && playing) {
+		next_start = position;
+		return false;
+	} else {
+		return force_play(position);
+	}
+}
+
+bool Sample::force_play(float position) {
 	int pos = (int) (total_frames * position + 0.5);
 	sf_seek(file, pos, SEEK_SET);
 	
 	reset_required = true;
 	
 	playing = true;
+	looping = true;
 	last_play_from = position;
 	
 	return true;
@@ -61,45 +80,59 @@ bool Sample::play(float position)
 
 bool Sample::give_event(PadEvent e)
 {
+	//an 'on' event
 	if (e.on) {
-		if (events.size() >= 1) {
-			PadEvent old_front = events.front();
-			if (try_add_event(e)) {
-				stopping_at = events.back().position;
-				if (events.front().pad_id != old_front.pad_id) {
-					print_events();
-					return play(events.front().position);
-				}
-			} else {
-				stopping_at = 1.0f;
-				print_events();
-				return play(e.position);
-			}
-		} else {
-			events.push_back(e);
-			stopping_at = 1.0f;
-			print_events();
-			return play(e.position);
-		}
-	} else {
-		std::list<PadEvent>::iterator ei = events.begin();
-		while (ei != events.end()) {
-			if (ei->pad_id == e.pad_id) {
-				events.erase(ei);
-				print_events();
-				return true;
-			}
-			++ei;
-		}
+		on_event(e);	
+	}
+	
+	//an 'off' event
+	else {
+		off_event(e);
 	}
 	
 	return false;
 }
 
+void Sample::on_event(PadEvent e) {
+	bool no_old_events = events.size() == 0;
+	
+	PadEvent old_front = events.front();
+	PadEvent old_back = events.back();
+	
+	try_add_event(e);
+	
+	if (no_old_events || events.front().start_position != old_front.start_position)
+		play(events.front().start_position);
+	
+	if (events.back().end_position != old_back.end_position) {
+		stopping_at = events.back().end_position;
+		next_stop = stopping_at;
+	}
+	
+	print_info();
+}
+
+void Sample::off_event(PadEvent e) {
+	try_remove_event(e);
+	
+	if (events.size() != 0) {
+		float new_stop = events.back().end_position;
+		if (new_stop > stopping_at)
+			stopping_at = new_stop;
+		else
+			next_stop = new_stop;
+	}
+	else {
+		looping = false;
+	}
+	
+	print_info();
+}
+
 bool Sample::try_add_event(PadEvent e) {
 	for (std::list<PadEvent>::iterator ei = events.begin() ;
 			ei != events.end() ; ++ei) {
-		if (ei->position > e.position) {
+		if (ei->start_position > e.start_position) {
 			events.insert(ei,e);
 			return true;
 		} else if (ei->pad_id == e.pad_id) {
@@ -110,14 +143,31 @@ bool Sample::try_add_event(PadEvent e) {
 	return true;
 }
 
+bool Sample::try_remove_event(PadEvent e) {
+	for (std::list<PadEvent>::iterator ei = events.begin() ;
+		ei != events.end() ; ++ei)
+	{
+		if (ei->pad_id == e.pad_id) {
+			events.erase(ei);
+			print_events();
+			return true;
+		}		
+	}
+	return false;
+}
+
 bool Sample::stop()
-{	
-	if (!looping) {
-		playing = false;
-		std::cout << "stopped playing sample " << filename << std::endl;
-	} else {
-		play(last_play_from);
+{
+	print_info();
+
+	if (looping || sticky_loops) {
+		force_play(next_start);
+		stopping_at = next_stop;
 		std::cout << "looped sample " << filename << std::endl;
+	} else {
+		playing = false;
+		stopping_at = 1.0;
+		std::cout << "stopped playing sample " << filename << std::endl;
 	}
 	
 	return true;
@@ -170,6 +220,8 @@ void Sample::next_frames(float frames[], int length) {
 				return;
 			}
 		}
+		
+		//rubberband
 		if (reset_required) {
 			rubber_band->reset();
 			reset_required = false;
@@ -177,7 +229,7 @@ void Sample::next_frames(float frames[], int length) {
 		while(rubber_band->available() < length) {
 			int frames_needed_by_rb = rubber_band->getSamplesRequired();
 			int frames_to_give_to_rb = length < frames_needed_by_rb ? length : frames_needed_by_rb;
-			//std::cout << "needed " << frames_to_give_to_rb << std::endl;
+			
 			int frames_got_from_sf = sf_readf_float(file, frames, frames_to_give_to_rb);
 			if (frames_got_from_sf == 0) { //run out of file
 				if (sf_error(file) != 0) {
@@ -191,6 +243,10 @@ void Sample::next_frames(float frames[], int length) {
 		}
 		
 		rubber_band->retrieve(&frames, length);
+		
+		//other effect
+		if (effect && effect_on)
+			effect->process(frames, length);
 	}
 }
 
@@ -222,6 +278,13 @@ void Sample::print_events() {
 	std::cout << "events:" << std::endl;
 	for (std::list<PadEvent>::iterator ei = events.begin() ;
 			ei != events.end() ; ++ei) {
-		std::cout << "		pos " << ei->position << " @ " << name << std::endl;
+		std::cout << "		pos " << ei->start_position << " @ " << name << std::endl;
 	}
+}
+
+void Sample::print_info() {
+	std::cout << "stopping at " << stopping_at << ", next stop " << next_stop
+			<< ", last_play from " << last_play_from << ", next start " << next_start
+			<< ", looping " << looping << ", sticky loops " << sticky_loops
+			<< std::endl;
 }

@@ -147,10 +147,12 @@ bool Loader::link_pads_to_samples(std::string filename, std::list<Pad> & pads, s
 					pad_node != pad_nodes.end() ; ++pad_node) {
 				int pad_id = parse_int(get_attribute(*pad_node,"id"));
 				int sample_id = parse_int(get_attribute(*pad_node,"sample_id"));
-				float position = parse_float(get_attribute(*pad_node,"position"));
+				float start = parse_float(get_attribute(*pad_node,"start"));
+				float end = parse_float(get_attribute(*pad_node,"end"));
 				
 				pad_ids_to_pads[pad_id]->set_sample(sample_ids_to_samples[sample_id]);
-				pad_ids_to_pads[pad_id]->set_position(position);
+				pad_ids_to_pads[pad_id]->start_position = start;
+				pad_ids_to_pads[pad_id]->end_position = end;
 			}
 		}
 	} catch(const std::exception& ex) {

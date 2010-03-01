@@ -14,8 +14,10 @@ class PadGui : public Gtk::Table {
 		Pad& pad;
 
 		Gtk::Button play_button;
-		Gtk::Adjustment position_spinner_adjustment;
-		Gtk::SpinButton position_spinner;
+		Gtk::Adjustment start_position_spinner_adjustment;
+		Gtk::SpinButton start_position_spinner;
+		Gtk::Adjustment end_position_spinner_adjustment;
+		Gtk::SpinButton end_position_spinner;
 		Gtk::ComboBox sample_choice;
 				
 		SampleChoiceModel* choice_model;
@@ -24,7 +26,8 @@ class PadGui : public Gtk::Table {
 		PadGui(Pad& pad, SampleChoiceModel* choice_model);
 		void on_sample_choice_changed();
 		void on_play_button_clicked();
-		void on_position_spinner_changed();
+		void on_start_position_spinner_changed();
+		void on_end_position_spinner_changed();
 
 		void refresh();
 };

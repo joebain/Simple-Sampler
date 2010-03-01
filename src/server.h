@@ -10,6 +10,8 @@
 #include "synth.h"
 #include "loader.h"
 #include "pad_event.h"
+#include "effect.h"
+#include "bit_effect.h"
 
 class Server {
 	private:
@@ -22,7 +24,9 @@ class Server {
 		std::list<SoundMaker*> sound_makers;
 		std::list<Synth> synths;
 		std::list<Sample> samples;
-		
+		std::list<Effect*> effects;
+		std::list<BitEffect> bit_effects;
+		BitEffect* bit_effect;
 		Sample* last_played_or_playing;
 		
 		std::list<Pad> pads;
@@ -30,6 +34,9 @@ class Server {
 		
 		bool remove_sound_maker(SoundMaker* sound_maker);
 		bool add_sound_maker(SoundMaker* sound_maker);
+		
+		bool remove_effect(Effect* effect);
+		bool add_effect(Effect* effect);
 	public:
 		Server();
 		~Server();
@@ -49,6 +56,14 @@ class Server {
 		bool add_samples(std::list<Sample> sample);
 		std::list<Sample> & get_samples() { return samples; }
 		bool remove_sample(Sample sample);
+		
+		bool add_bit_effect(BitEffect effect);
+		bool add_bit_effects(std::list<BitEffect> effect);
+		std::list<BitEffect> & get_bit_effects() { return bit_effects; }
+		BitEffect* get_bit_effect() {return bit_effect;}
+		bool remove_bit_effect(BitEffect effect);
+		
+		std::list<Effect*> get_effects() { return effects; }
 		
 		SoundMaker* get_sound_maker(int id);
 		

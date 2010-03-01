@@ -10,19 +10,23 @@
 #include "server.h"
 
 #include "pad_gui.h"
+#include "bit_effect_gui.h"
 
 class GuiClient : public Client, public Gtk::Window {
 	private:
 		void on_add_sample_button_clicked();
 		void on_load_pad_config_button_clicked();
+		void on_edit_bit_effect_button_clicked();
 		void on_sample_is_looping_toogled(const Glib::ustring& path);
+		void on_has_effect_toogled(const Glib::ustring& path);
 		
 		void init();
 		void refresh();
 		
 		Gtk::Button add_sample_button;
 		Gtk::Button load_pad_config_button;
-		Gtk::Button test_button;
+		Gtk::Button edit_bit_effect_button;
+		
 		Gtk::TextView message_window;
 		Gtk::VBox v_box;
 		Gtk::ScrolledWindow scrolled_window;
@@ -31,6 +35,9 @@ class GuiClient : public Client, public Gtk::Window {
 		Gtk::HButtonBox button_box;
 		Gtk::Frame sample_frame;
 		Gtk::TreeView sample_list_view;
+		
+		BitEffectGui* bit_effect_gui;
+		Gtk::Window edit_bit_effect_window;
 		
 		SampleChoiceModel* choice_model;
 		

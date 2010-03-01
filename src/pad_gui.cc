@@ -3,16 +3,19 @@
 #include <iostream>
 
 PadGui::PadGui(Pad& pad, SampleChoiceModel* choice_model) :
-	Gtk::Table(2,2) , pad(pad),
-	position_spinner_adjustment(0.0, 0.0, 1.0, 0.05, 0.25, 0),
-  	position_spinner(position_spinner_adjustment,0.2,2)
+	Gtk::Table(2,3) , pad(pad),
+	start_position_spinner_adjustment(0.0, 0.0, 1.0, 0.05, 0.25, 0),
+  	start_position_spinner(start_position_spinner_adjustment,0.2,2),
+  	end_position_spinner_adjustment(0.0, 0.0, 1.0, 0.05, 0.25, 0),
+  	end_position_spinner(end_position_spinner_adjustment,0.2,2)
 {
 	this->choice_model = choice_model;
 	
 	//put everything in
-	attach(play_button,0,1,0,1);
-	attach(position_spinner,1,2,0,1);
-	attach(sample_choice,0,2,1,2);
+	attach(play_button,0,2,0,1);
+	attach(start_position_spinner,0,1,1,2);
+	attach(end_position_spinner,1,2,1,2);
+	attach(sample_choice,0,2,2,3);
 	
 	//play button
 	play_button.set_label("Play");
@@ -28,9 +31,12 @@ PadGui::PadGui(Pad& pad, SampleChoiceModel* choice_model) :
 			sigc::mem_fun(*this, &PadGui::on_sample_choice_changed)
 			);
 	
-	//position spinner
-	position_spinner_adjustment.signal_value_changed().connect(
-			sigc::mem_fun(*this, &PadGui::on_position_spinner_changed)
+	//position spinners
+	start_position_spinner_adjustment.signal_value_changed().connect(
+			sigc::mem_fun(*this, &PadGui::on_start_position_spinner_changed)
+			);
+	end_position_spinner_adjustment.signal_value_changed().connect(
+			sigc::mem_fun(*this, &PadGui::on_end_position_spinner_changed)
 			);
 			
 	refresh();
@@ -38,28 +44,25 @@ PadGui::PadGui(Pad& pad, SampleChoiceModel* choice_model) :
 
 void PadGui::on_sample_choice_changed() {
 	Gtk::TreeModel::iterator iter = sample_choice.get_active();
-	if(iter) {
-		Gtk::TreeModel::Row row = *iter;
-		if(row)	{
-			Glib::ustring name = row[choice_model->name_column];
-			std::cout << "sample chosen is " << name << std::endl;
-			
-			pad.set_sample(row[choice_model->sample_column]);
-		}
-	} else {
-		std::cout << "no selection" << std::endl;
-	}
+	if(!iter) return;
+	Gtk::TreeModel::Row row = *iter;
+	if(!row) return;
+	
+	Glib::ustring name = row[choice_model->name_column];
+	pad.set_sample(row[choice_model->sample_column]);
 }
 
 void PadGui::on_play_button_clicked() {
-	std::cout << "play clicked" << std::endl;
 	pad.hit(1.0);
 	pad.release();
 }
 
-void PadGui::on_position_spinner_changed() {
-	std::cout << "position changed to " << position_spinner.get_value() << std::endl;
-	pad.set_position(position_spinner.get_value());
+void PadGui::on_start_position_spinner_changed() {
+	pad.start_position = start_position_spinner.get_value();
+}
+
+void PadGui::on_end_position_spinner_changed() {
+	pad.end_position = end_position_spinner.get_value();
 }
 
 void PadGui::refresh() {
@@ -73,5 +76,6 @@ void PadGui::refresh() {
 		}	
 	}
 	
-	position_spinner.set_value(pad.get_position());
+	start_position_spinner.set_value(pad.start_position);
+	end_position_spinner.set_value(pad.end_position);
 }

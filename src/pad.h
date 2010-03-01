@@ -6,8 +6,7 @@
 class Pad {
 	private:
 		Sample* sample;
-		float position;
-
+		
 		int event_number;
 		int id;
 		
@@ -17,6 +16,10 @@ class Pad {
 	public:
 		Pad() { Pad(0,0); }
 		Pad(int event_number, int id);
+		
+		float start_position;
+		float end_position;
+		
 		int get_event_number() { return event_number; }
 		int get_id() { return id; }
 		void set_event_number(int event_number) { this->event_number = event_number; }
@@ -31,8 +34,7 @@ class Pad {
 			has_a_sample = true;
 		}
 		Sample* get_sample() { return sample; }
-		void set_position(float position) { this->position = position; }
-		float get_position() { return position; }
+		
 		void hit(float velocity);
 		void release();
 };

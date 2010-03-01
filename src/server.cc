@@ -8,6 +8,8 @@
 
 Server::Server() {
 	jack = new Jack();
+	bit_effect = new BitEffect(1);
+	add_bit_effect(*bit_effect);
 }
 
 Server::~Server() {
@@ -40,7 +42,9 @@ bool Server::add_sample(Sample sample) {
 	samples.push_back(sample);
 	
 	std::cout << "added a sample, name: " << sample.get_filename() << std::endl;
-		
+	
+	samples.back().set_effect(bit_effect);
+	
 	return add_sound_maker(&samples.back());
 }
 
@@ -240,4 +244,55 @@ void Server::set_pads(std::list<Pad> new_pads) {
 void Server::add_pad(Pad pad) {
 	pads.push_back(pad);
 	events_to_pads[pad.get_event_number()] = &(pads.back());
+}
+
+bool Server::add_bit_effect(BitEffect effect) {
+	bit_effects.push_back(effect);
+	
+	return add_effect(&bit_effects.back());
+}
+
+bool Server::add_bit_effects(std::list<BitEffect> new_effects) {
+	for (std::list<BitEffect>::iterator i = new_effects.begin() ;
+		i != new_effects.end(); ++i)
+	{
+		if (!add_bit_effect(*i)) return false;
+	}
+	
+	return true;
+}
+
+bool Server::remove_bit_effect(BitEffect effect) {
+	uint size = bit_effects.size();
+	
+	for (std::list<BitEffect>::iterator e = bit_effects.begin() ;
+		e != bit_effects.end() ; ++e)
+	{
+		if (e->equal(&effect)) {
+			bit_effects.erase(e);
+			break;
+		}
+	}
+
+	return size > bit_effects.size() && remove_effect(&effect);
+}
+
+bool Server::remove_effect(Effect* effect) {
+	uint size = effects.size();
+	
+	for (std::list<Effect*>::iterator e = effects.begin() ;
+		e != effects.end() ; ++e)
+	{
+		if ((*e)->equal(effect)) {
+			effects.erase(e);
+			break;
+		}
+	}
+
+	return size > effects.size();
+}
+
+bool Server::add_effect(Effect* effect) {
+	effects.push_back(effect);
+	return true;
 }

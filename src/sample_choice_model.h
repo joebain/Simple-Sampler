@@ -16,6 +16,7 @@ class SampleChoiceModel : public Gtk::TreeModel::ColumnRecord {
 		Gtk::TreeModelColumn<Sample*> sample_column;
 		Gtk::TreeModelColumn<Glib::ustring> name_column;
 		Gtk::TreeModelColumn<bool> is_looping_column;
+		Gtk::TreeModelColumn<bool> has_effect_column;
 		
 		void set_samples(std::list<Sample> & samples);
 		void add_sample(Sample* sample);

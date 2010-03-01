@@ -23,6 +23,7 @@ GuiClient::GuiClient(Server* server) : Client(server) {
 	
 	button_box.add(add_sample_button);
 	button_box.add(load_pad_config_button);
+	button_box.add(edit_bit_effect_button);
 
 	scrolled_window.add(message_window);
 	
@@ -36,6 +37,10 @@ GuiClient::GuiClient(Server* server) : Client(server) {
 	load_pad_config_button.set_label("Load pads");
 	load_pad_config_button.signal_clicked().connect(sigc::mem_fun(*this,
               &GuiClient::on_load_pad_config_button_clicked));
+    
+    edit_bit_effect_button.set_label("Edit effect");
+	edit_bit_effect_button.signal_clicked().connect(sigc::mem_fun(*this,
+              &GuiClient::on_edit_bit_effect_button_clicked));
 
 	scrolled_window.set_policy(Gtk::POLICY_AUTOMATIC, Gtk::POLICY_AUTOMATIC);
 	
@@ -129,21 +134,31 @@ void GuiClient::on_add_sample_button_clicked() {
 	}
 }
 
+void GuiClient::on_edit_bit_effect_button_clicked() {
+	bit_effect_gui = new BitEffectGui(server->get_bit_effect());
+	edit_bit_effect_window.add(*bit_effect_gui);
+	edit_bit_effect_window.show_all_children();
+	edit_bit_effect_window.show();
+}
+
 void GuiClient::on_sample_is_looping_toogled(const Glib::ustring& path) {
-	std::cout << "path: " << path << std::endl;
 	Gtk::TreeModel::iterator iter = sample_list_view.get_model()->get_iter(path);
-	if(iter) {
-		Gtk::TreeModel::Row row = *iter;
-		if(row)	{
-			Sample* sample = row[choice_model->sample_column];
-			bool looping_ticked = row[choice_model->is_looping_column];
-			sample->set_looping(looping_ticked);
-			
-			std::cout << "ticking: " << (looping_ticked?"true":"false") << std::endl;
-		}
-	} else {
-		std::cout << "no selection" << std::endl;
-	}
+	if(!iter) return;
+	Gtk::TreeModel::Row row = *iter;
+	if(!row) return;
+	Sample* sample = row[choice_model->sample_column];
+	bool looping_ticked = row[choice_model->is_looping_column];
+	sample->sticky_loops = looping_ticked;
+}
+
+void GuiClient::on_has_effect_toogled(const Glib::ustring& path) {
+	Gtk::TreeModel::iterator iter = sample_list_view.get_model()->get_iter(path);
+	if(!iter) return;
+	Gtk::TreeModel::Row row = *iter;
+	if(!row) return;
+	Sample* sample = row[choice_model->sample_column];
+	bool has_effect = row[choice_model->has_effect_column];
+	sample->set_effect_on(has_effect);
 }
 
 void GuiClient::init() {
@@ -151,9 +166,11 @@ void GuiClient::init() {
 	choice_model = new SampleChoiceModel (server->get_samples());
 	
 	//main sample list
+	//----------------
 	sample_list_view.set_model(choice_model->ref_tree_model);
 	sample_list_view.append_column("name", choice_model->name_column);
 	
+	//toggle looping
 	int view_column = sample_list_view.append_column_editable("loop?", choice_model->is_looping_column);	
 	Gtk::CellRenderer *renderer = sample_list_view.get_column_cell_renderer(view_column - 1);
 	Gtk::CellRendererToggle *toggle_renderer =
@@ -163,8 +180,20 @@ void GuiClient::init() {
 		toggle_renderer->signal_toggled().connect
 			( sigc::mem_fun(*this, &GuiClient::on_sample_is_looping_toogled) );
 	}
+	
+	//toggle effect
+	view_column = sample_list_view.append_column_editable("effect?", choice_model->has_effect_column);	
+	renderer = sample_list_view.get_column_cell_renderer(view_column - 1);
+	toggle_renderer =
+		dynamic_cast<Gtk::CellRendererToggle *>(renderer);
+	if (toggle_renderer)
+	{
+		toggle_renderer->signal_toggled().connect
+			( sigc::mem_fun(*this, &GuiClient::on_has_effect_toogled) );
+	}
 
 	//pads
+	//----
 	std::list<Pad> & pads = server->get_pads();
 	for (std::list<Pad>::iterator pi = pads.begin() ;
 			pi != pads.end() ; ++pi) {

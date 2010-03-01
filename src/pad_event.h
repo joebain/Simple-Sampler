@@ -6,7 +6,8 @@ class PadEvent {
 		int pad_id;
 		int velocity;
 		bool on;
-		float position;
+		float start_position;
+		float end_position;
 };
 
 #endif

@@ -1,20 +1,20 @@
 <controller>
 	<pads>
 		<row>
-			<pad event_number="24" id="1"></pad>
-			<pad event_number="26" id="2"></pad>
-			<pad event_number="28" id="3"></pad>
-			<pad event_number="2a" id="4"></pad>
-			<pad event_number="2c" id="5"></pad>
-			<pad event_number="2e" id="6"></pad>
+			<pad event_number="24" id="1" key="q"></pad>
+			<pad event_number="26" id="2" key="w"></pad>
+			<pad event_number="28" id="3" key="e"></pad>
+			<pad event_number="2a" id="4" key="r"></pad>
+			<pad event_number="2c" id="5" key="t"></pad>
+			<pad event_number="2e" id="6" key="y"></pad>
 		</row>
 		<row>
-			<pad event_number="27" id="7"></pad>
-			<pad event_number="30" id="8"></pad>
-			<pad event_number="2d" id="9"></pad>
-			<pad event_number="2b" id="10"></pad>
-			<pad event_number="33" id="11"></pad>
-			<pad event_number="31" id="12"></pad>
+			<pad event_number="27" id="7" key="a"></pad>
+			<pad event_number="30" id="8" key="s"></pad>
+			<pad event_number="2d" id="9" key="d"></pad>
+			<pad event_number="2b" id="10" key="f"></pad>
+			<pad event_number="33" id="11" key="g"></pad>
+			<pad event_number="31" id="12" key="h"></pad>
 		</row>
 	</pads>
 </controller>
