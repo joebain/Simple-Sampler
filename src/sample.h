@@ -45,6 +45,7 @@ class Sample : public SoundMaker
 		float playing_pitch;
 		
 		bool effect_on;
+		bool timestretch_on;
 		
 		void on_event(PadEvent e);
 		void off_event(PadEvent e);
@@ -53,6 +54,7 @@ class Sample : public SoundMaker
 		void blank(const float *const * frames, int length);
 		void print_events();
 		void print_info();
+		void check_sf_errors();
 		
 		bool play();
 		bool play(float position);
@@ -98,6 +100,9 @@ class Sample : public SoundMaker
 		void set_effect(Effect* effect) { this->effect = effect; }
 		bool effect_enabled() { return effect_on; }
 		void set_effect_on(bool value) { effect_on = value; }
+		
+		bool timestretch_enabled() { return timestretch_on; }
+		void set_timestretch_on(bool value) { timestretch_on = value; }
 };
 
 #endif // _SAMPLE_H_

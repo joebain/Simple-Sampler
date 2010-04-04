@@ -12,6 +12,7 @@ Sample::Sample() {
 	playing = false;
 	looping = false;
 	effect_on = false;
+	timestretch_on = false;
 	sticky_loops = false;
 	stopping_at = 1.0;
 	next_stop = 1.0;
@@ -222,31 +223,42 @@ void Sample::next_frames(float frames[], int length) {
 		}
 		
 		//rubberband
-		if (reset_required) {
-			rubber_band->reset();
-			reset_required = false;
-		}
-		while(rubber_band->available() < length) {
-			int frames_needed_by_rb = rubber_band->getSamplesRequired();
-			int frames_to_give_to_rb = length < frames_needed_by_rb ? length : frames_needed_by_rb;
-			
-			int frames_got_from_sf = sf_readf_float(file, frames, frames_to_give_to_rb);
-			if (frames_got_from_sf == 0) { //run out of file
-				if (sf_error(file) != 0) {
-					std::cerr << "there was an error getting sound data (" << sf_strerror(file) << ")" << std::endl;
-				}
-				stop();
-				rubber_band->retrieve(&frames, rubber_band->available());
-				return;
+		if (timestretch_on) {
+			if (reset_required) {
+				rubber_band->reset();
+				reset_required = false;
 			}
-			rubber_band->process(&frames, frames_to_give_to_rb, false);
+			while(rubber_band->available() < length) {
+				int frames_needed_by_rb = rubber_band->getSamplesRequired();
+				int frames_to_give_to_rb = length < frames_needed_by_rb ? length : frames_needed_by_rb;
+				
+				int frames_got_from_sf = sf_readf_float(file, frames, frames_to_give_to_rb);
+				if (frames_got_from_sf != length) { //run out of file
+					check_sf_errors();
+					stop();
+					rubber_band->retrieve(&frames, rubber_band->available());
+					return;
+				}
+				rubber_band->process(&frames, frames_to_give_to_rb, false);
+			}
+			
+			rubber_band->retrieve(&frames, length);
+		} else {
+			if (sf_readf_float(file, frames, length) != length) { //run out of file
+				check_sf_errors();
+				stop();
+			}
 		}
-		
-		rubber_band->retrieve(&frames, length);
 		
 		//other effect
 		if (effect && effect_on)
 			effect->process(frames, length);
+	}
+}
+
+void Sample::check_sf_errors() {
+	if (sf_error(file) != 0) {
+		std::cerr << "there was an error getting sound data (" << sf_strerror(file) << ")" << std::endl;
 	}
 }
 

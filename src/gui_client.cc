@@ -161,6 +161,16 @@ void GuiClient::on_has_effect_toogled(const Glib::ustring& path) {
 	sample->set_effect_on(has_effect);
 }
 
+void GuiClient::on_has_timestretch_toogled(const Glib::ustring& path) {
+	Gtk::TreeModel::iterator iter = sample_list_view.get_model()->get_iter(path);
+	if(!iter) return;
+	Gtk::TreeModel::Row row = *iter;
+	if(!row) return;
+	Sample* sample = row[choice_model->sample_column];
+	bool has_timestretch = row[choice_model->has_timestretch_column];
+	sample->set_timestretch_on(has_timestretch);
+}
+
 void GuiClient::init() {
 	//sample model
 	choice_model = new SampleChoiceModel (server->get_samples());
@@ -190,6 +200,17 @@ void GuiClient::init() {
 	{
 		toggle_renderer->signal_toggled().connect
 			( sigc::mem_fun(*this, &GuiClient::on_has_effect_toogled) );
+	}
+	
+	//toggle timestretch
+	view_column = sample_list_view.append_column_editable("time warpd?", choice_model->has_timestretch_column);	
+	renderer = sample_list_view.get_column_cell_renderer(view_column - 1);
+	toggle_renderer =
+		dynamic_cast<Gtk::CellRendererToggle *>(renderer);
+	if (toggle_renderer)
+	{
+		toggle_renderer->signal_toggled().connect
+			( sigc::mem_fun(*this, &GuiClient::on_has_timestretch_toogled) );
 	}
 
 	//pads

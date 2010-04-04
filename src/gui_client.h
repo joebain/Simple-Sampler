@@ -19,6 +19,7 @@ class GuiClient : public Client, public Gtk::Window {
 		void on_edit_bit_effect_button_clicked();
 		void on_sample_is_looping_toogled(const Glib::ustring& path);
 		void on_has_effect_toogled(const Glib::ustring& path);
+		void on_has_timestretch_toogled(const Glib::ustring& path);
 		
 		void init();
 		void refresh();
