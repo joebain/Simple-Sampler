@@ -22,6 +22,8 @@ class PadGui : public Gtk::Table {
 				
 		SampleChoiceModel* choice_model;
 
+		bool highlighted;
+
 	public:
 		PadGui(Pad& pad, SampleChoiceModel* choice_model);
 		void on_sample_choice_changed();
@@ -30,6 +32,13 @@ class PadGui : public Gtk::Table {
 		void on_end_position_spinner_changed();
 
 		void refresh();
+		
+		const Pad& get_pad() { return pad; }
+		
+		void update();
+		
+		void highlight();
+		void unhighlight();
 };
 
 #endif

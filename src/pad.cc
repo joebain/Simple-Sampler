@@ -23,6 +23,13 @@ void Pad::hit(float velocity) {
 	sample->give_event(e);
 }
 
+bool Pad::is_playing() const {
+	if (!has_a_sample) return false;
+	if (!sample->is_playing()) return false;
+	float pos = sample->get_position();
+	return pos > start_position && pos <= end_position && pos != 0 && pos != 1;
+}
+
 void Pad::release() {
 	if (!has_a_sample) return;
 	
@@ -33,4 +40,8 @@ void Pad::release() {
 	e.pad_id = id;
 	
 	sample->give_event(e);
+}
+
+bool Pad::operator== (const Pad & other) const {
+	return id == other.get_id();
 }

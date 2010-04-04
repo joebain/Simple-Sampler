@@ -14,9 +14,12 @@ Sample::Sample() {
 	effect_on = false;
 	timestretch_on = false;
 	sticky_loops = false;
-	stopping_at = 1.0;
-	next_stop = 1.0;
-	last_play_from = 0.0;
+	
+	next_end_point = 1.0;
+	next_start_point = 0.0;
+	end_point = 1.0;
+	start_point = 0.0;
+	pad_down = false;
 	base_speed = 1.0;
 	playing_speed = 1.0;
 	base_pitch = 1.0;
@@ -46,38 +49,81 @@ bool Sample::load(std::string filename)
 	return true;
 }
 
+void Sample::control() {
+	if (pad_down) looping = true;
+	else looping = false;
+	
+	float pos = get_position();
+	if (pos >= end_point) {
+		if (start_point == end_point) {
+			stop();
+		} else if (looping) {
+			start_point = next_start_point;
+			//end_point = next_end_point;
+			
+			set_position(start_point);
+			
+			std::cout << "looping" << std::endl;
+		} else {
+			stop();
+			
+		}
+	}
+}
+
 bool Sample::play() {
 	return play(0.0f);
 }
 
-bool Sample::play(float position)
-{	
-	if (position == 1.0) {
-		playing = false;
-		looping = false;
-		return false;
-	}
+void Sample::set_position(float position) {
+	if (position > 1 || position < 0) return;
+	int pos_i = position * total_frames;
+	sf_seek(file, pos_i, SEEK_SET); //current position in the file
 	
-	if (sticky_loops && playing) {
-		next_start = position;
-		return false;
-	} else {
-		return force_play(position);
-	}
+	reset_required = true; //for rubberband
 }
 
-bool Sample::force_play(float position) {
-	int pos = (int) (total_frames * position + 0.5);
-	sf_seek(file, pos, SEEK_SET);
-	
-	reset_required = true;
-	
+void Sample::set_end_point(float position) {
+	//if (sticky_loops) next_end_point = position;
+	end_point = position;
+}
+
+void Sample::set_start_point(float position) {
+	if (!looping || !playing) start_point = position;
+	next_start_point = position;
+}
+
+bool Sample::request_play() {
+	std::cout << "play request" << std::endl;
+	//if (!playing) {
+	if (next_start_point == start_point) {
+		play(start_point);
+		return true;
+	}
+	return false;
+}
+
+bool Sample::play(float position)
+{	
+	std::cout << "playing" << std::endl;
+	set_position(position);
 	playing = true;
-	looping = true;
-	last_play_from = position;
 	
 	return true;
 }
+
+//~ bool Sample::force_play(float position) {
+	//~ int pos = (int) (total_frames * position + 0.5);
+	//~ sf_seek(file, pos, SEEK_SET);
+	//~ 
+	//~ reset_required = true;
+	//~ 
+	//~ playing = true;
+	//~ looping = true;
+	//~ last_play_from = position;
+	//~ 
+	//~ return true;
+//~ }
 
 bool Sample::give_event(PadEvent e)
 {
@@ -88,6 +134,7 @@ bool Sample::give_event(PadEvent e)
 	
 	//an 'off' event
 	else {
+		if (sticky_loops) return true; //no off events with sticky loops
 		off_event(e);
 	}
 	
@@ -100,31 +147,37 @@ void Sample::on_event(PadEvent e) {
 	PadEvent old_front = events.front();
 	PadEvent old_back = events.back();
 	
-	try_add_event(e);
-	
-	if (no_old_events || events.front().start_position != old_front.start_position)
-		play(events.front().start_position);
-	
-	if (events.back().end_position != old_back.end_position) {
-		stopping_at = events.back().end_position;
-		next_stop = stopping_at;
+	if (!try_add_event(e)) {
+		if (sticky_loops) { //treat down as an up if we havent got a down already
+			off_event(e);
+		} else {
+			return;
+		}
 	}
+	set_start_point(events.front().start_position);
+	set_end_point(events.back().end_position);
+
+	//here we have a new early pad so we want to try and play from there
+	if (no_old_events || events.front().start_position != old_front.start_position) {
+		request_play();
+	}
+	
+	pad_down = true;
 	
 	print_info();
 }
 
 void Sample::off_event(PadEvent e) {
+	
 	try_remove_event(e);
 	
 	if (events.size() != 0) {
-		float new_stop = events.back().end_position;
-		if (new_stop > stopping_at)
-			stopping_at = new_stop;
-		else
-			next_stop = new_stop;
+		set_start_point(events.front().start_position);
+		set_end_point(events.back().end_position);
 	}
 	else {
-		looping = false;
+		pad_down = false;
+		//stop();
 	}
 	
 	print_info();
@@ -161,15 +214,24 @@ bool Sample::stop()
 {
 	print_info();
 
-	if (looping || sticky_loops) {
-		force_play(next_start);
-		stopping_at = next_stop;
-		std::cout << "looped sample " << filename << std::endl;
-	} else {
-		playing = false;
-		stopping_at = 1.0;
-		std::cout << "stopped playing sample " << filename << std::endl;
-	}
+	playing = false;
+	set_position(1.0);
+	
+	start_point = 0;
+	next_start_point = 0;
+	end_point = 1;
+	
+	std::cout << "stopping" << std::endl;
+
+	//~ if (looping || sticky_loops) {
+		//~ force_play(next_start);
+		//~ stopping_at = next_stop;
+		//~ std::cout << "looped sample " << filename << std::endl;
+	//~ } else {
+		//~ playing = false;
+		//~ stopping_at = 1.0;
+		//~ std::cout << "stopped playing sample " << filename << std::endl;
+	//~ }
 	
 	return true;
 }
@@ -209,18 +271,19 @@ void Sample::reset_pitch() {
 	set_pitch(base_pitch);
 }
 
+float Sample::get_position() {
+	int pos_i = sf_seek(file, 0, SEEK_CUR); //current position in the file
+	if (pos_i != -1) {
+		return (float)pos_i / (float)total_frames;
+	}
+	return 1.0f;
+}
+
 void Sample::next_frames(float frames[], int length) {
 	
+	control();
+	
 	if (playing) {
-		
-		int pos_i = sf_seek(file, 0, SEEK_CUR); //current position in the file
-		if (pos_i != -1) {
-			float pos_f = (float)pos_i / (float)total_frames;
-			if (pos_f > stopping_at) {
-				stop();
-				return;
-			}
-		}
 		
 		//rubberband
 		if (timestretch_on) {
@@ -245,10 +308,13 @@ void Sample::next_frames(float frames[], int length) {
 			rubber_band->retrieve(&frames, length);
 		} else {
 			if (sf_readf_float(file, frames, length) != length) { //run out of file
-				check_sf_errors();
-				stop();
+				//~ check_sf_errors();
+				//~ stop();
+				//~ return;
 			}
 		}
+		
+		check_sf_errors();
 		
 		//other effect
 		if (effect && effect_on)
@@ -295,8 +361,9 @@ void Sample::print_events() {
 }
 
 void Sample::print_info() {
-	std::cout << "stopping at " << stopping_at << ", next stop " << next_stop
-			<< ", last_play from " << last_play_from << ", next start " << next_start
+	std::cout << "start " << start_point << ", end " << end_point
+			<< ", next start " << next_start_point //<< ", next end " << next_end_point
+			<< ", pad down " << pad_down
 			<< ", looping " << looping << ", sticky loops " << sticky_loops
 			<< std::endl;
 }

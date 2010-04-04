@@ -11,6 +11,8 @@ PadGui::PadGui(Pad& pad, SampleChoiceModel* choice_model) :
 {
 	this->choice_model = choice_model;
 	
+	highlighted = false;
+	
 	//put everything in
 	attach(play_button,0,2,0,1);
 	attach(start_position_spinner,0,1,1,2);
@@ -78,4 +80,39 @@ void PadGui::refresh() {
 	
 	start_position_spinner.set_value(pad.start_position);
 	end_position_spinner.set_value(pad.end_position);
+}
+
+void PadGui::update() {
+	if (get_pad().is_playing()) {
+		highlight();
+	} else {
+		unhighlight();
+	}
+}
+
+void PadGui::highlight() {
+	if (highlighted) return;
+	
+	highlighted = true;
+	
+	Glib::RefPtr<Gtk::Style> style = get_style();
+	
+	Gdk::Color new_bg = style->get_bg(Gtk::STATE_SELECTED);
+	Gdk::Color red;
+	red.set_rgb_p(1,0,0);
+	play_button.modify_bg(Gtk::STATE_NORMAL, red);
+	play_button.modify_bg(Gtk::STATE_ACTIVE, red);
+	
+	play_button.modify_fg(Gtk::STATE_NORMAL, red);
+	modify_bg(Gtk::STATE_NORMAL, red);
+	modify_fg(Gtk::STATE_NORMAL, red);
+	play_button.set_label("GO");
+}
+
+void PadGui::unhighlight() {
+	if (!highlighted) return;
+	
+	highlighted = false;
+	
+	play_button.set_label("Play");
 }

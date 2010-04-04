@@ -21,13 +21,15 @@ class Pad {
 		float end_position;
 		
 		int get_event_number() { return event_number; }
-		int get_id() { return id; }
+		const int get_id() const { return id; }
 		void set_event_number(int event_number) { this->event_number = event_number; }
 		void set_id(int id) { this->id = id; }
 		
 		void set_pos(int x, int y) { this->x = x; this->y = y; }
 		int get_x() { return x; }
 		int get_y() { return y; }
+		
+		bool is_playing() const;
 		
 		void set_sample(Sample* sample) {
 			this->sample = sample;
@@ -37,6 +39,8 @@ class Pad {
 		
 		void hit(float velocity);
 		void release();
+		
+		bool operator== (const Pad & other) const;
 };
 
 #endif

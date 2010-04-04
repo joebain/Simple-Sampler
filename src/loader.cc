@@ -39,7 +39,41 @@ bool Loader::load_sample(std::string filename, Sample& sample) {
 	return sample.load(filename);
 }
 
-bool Loader::save_sample_file(std::string filename, std::list<Sample> samples) {
+std::string Loader::to_string(int i) {
+	std::stringstream ss;
+	ss << i;
+	return ss.str();
+}
+
+std::string Loader::to_string(float i) {
+	std::stringstream ss;
+	ss << i;
+	return ss.str();
+}
+
+bool Loader::save_sample_file(std::string filename, std::list<Sample> & samples) {
+	try {
+		xmlpp::Document document;
+		
+		xmlpp::Node* root_node = document.create_root_node("samples");
+				
+		for (std::list<Sample>::iterator sample = samples.begin() ;
+				sample != samples.end() ; ++sample) {
+			std::string sample_filename = sample->get_filename();
+			std::string id = to_string(sample->id);
+						
+			xmlpp::Element* child = root_node->add_child("sample");
+			child->set_attribute("filename",sample_filename);
+			child->set_attribute("id",id);
+		}
+		
+		document.write_to_file(filename);
+		
+	} catch(const std::exception& ex) {
+		std::cout << "Exception caught writing samples xml file: " << ex.what() << std::endl;
+		return false;
+	}
+	
 	return true;
 }
 
@@ -111,7 +145,44 @@ Pad Loader::parse_pad_node(xmlpp::Node* pad_node) {
 	return pad;
 }
 
-bool Loader::save_controller_config(std::string filename, std::list<Pad> pads) {
+bool Loader::save_controller_config(std::string filename, std::list<Pad> & pads) {
+	try {
+		xmlpp::Document document;
+		
+		xmlpp::Node* root_node = document.create_root_node("controller");
+		xmlpp::Node* pads_node = root_node->add_child("pads");
+		
+		std::map<int, xmlpp::Node*> rows;
+		
+		for (std::list<Pad>::iterator pad = pads.begin() ;
+				pad != pads.end() ; ++pad) {
+			std::string event_number = to_string(pad->get_event_number());
+			std::string key = "x";
+			std::string id = to_string(pad->get_id());
+			
+			int row = pad->get_x();
+			
+			xmlpp::Node* row_node;
+			
+			std::map<int, xmlpp::Node*>::iterator it = rows.find(row);
+			if (it == rows.end()) {
+				row_node = pads_node->add_child("row");
+			} else {
+				row_node = it->second;
+			}
+			
+			xmlpp::Element* pad_el = row_node->add_child("pad");
+			pad_el->set_attribute("event_number",event_number);
+			pad_el->set_attribute("id",id);
+		}
+		
+		document.write_to_file(filename);
+		
+	} catch(const std::exception& ex) {
+		std::cout << "Exception caught parsing controller xml file: " << ex.what() << std::endl;
+		return false;
+	}
+	
 	return true;
 }
 

@@ -23,6 +23,8 @@ GuiClient::GuiClient(Server* server) : Client(server) {
 	
 	button_box.add(add_sample_button);
 	button_box.add(load_pad_config_button);
+	button_box.add(save_sample_config_button);
+	button_box.add(save_pad_config_button);
 	button_box.add(edit_bit_effect_button);
 
 	scrolled_window.add(message_window);
@@ -37,6 +39,14 @@ GuiClient::GuiClient(Server* server) : Client(server) {
 	load_pad_config_button.set_label("Load pads");
 	load_pad_config_button.signal_clicked().connect(sigc::mem_fun(*this,
               &GuiClient::on_load_pad_config_button_clicked));
+              
+    save_sample_config_button.set_label("Save samples");
+	save_sample_config_button.signal_clicked().connect(sigc::mem_fun(*this,
+              &GuiClient::on_save_sample_config_button_clicked));
+    
+    save_pad_config_button.set_label("Save pads");
+	save_pad_config_button.signal_clicked().connect(sigc::mem_fun(*this,
+              &GuiClient::on_save_pad_config_button_clicked));
     
     edit_bit_effect_button.set_label("Edit effect");
 	edit_bit_effect_button.signal_clicked().connect(sigc::mem_fun(*this,
@@ -70,10 +80,42 @@ GuiClient::~GuiClient() {
 void GuiClient::start() {
 	Client::start();
 	
+	Glib::signal_timeout().connect(
+	sigc::mem_fun(*this, &GuiClient::update_gtk), 10);
+	
 	Gtk::Main::run(*this);
 	
-	//when main exits
+	//when gtk main exits
+	stop();
+}
+
+void GuiClient::stop() {
+	Client::stop();
+	
 	server->stop();
+}
+
+bool GuiClient::update_gtk() {
+	//update pad status
+	for (std::list<PadGui*>::iterator pad_gui = pad_guis.begin()
+			; pad_gui != pad_guis.end() ; ++pad_gui) {
+		(*pad_gui)->update();
+	}
+	
+	return true;
+}
+
+void GuiClient::update() {
+	Client::update();
+	//not used
+}
+
+PadGui* GuiClient::get_pad_gui(Pad pad) {
+	for (std::list<PadGui*>::iterator pad_gui = pad_guis.begin()
+			; pad_gui != pad_guis.end() ; ++pad_gui) {
+		if (pad == (*pad_gui)->get_pad()) return *pad_gui;
+	}
+	return NULL;
 }
 
 void GuiClient::on_load_pad_config_button_clicked() {
@@ -100,6 +142,51 @@ void GuiClient::on_load_pad_config_button_clicked() {
 		refresh();
 		message_window.get_buffer()->insert_at_cursor("Loaded pads\n");
 	}
+}
+
+void GuiClient::on_save_sample_config_button_clicked() {
+	std::string filename;
+	if (get_xml_file(&filename)) {
+		save_samples(filename);
+		refresh();
+		message_window.get_buffer()->insert_at_cursor("Saved samples\n");
+	}
+}
+
+void GuiClient::on_save_pad_config_button_clicked() {
+	std::string filename;
+	if (get_xml_file(&filename)) {
+		save_pads(filename);
+		refresh();
+		message_window.get_buffer()->insert_at_cursor("Saved pads\n");
+	}
+}
+
+bool GuiClient::get_xml_file(std::string* filename) {
+	Gtk::FileChooserDialog dialog(
+		"Please choose a file",
+		Gtk::FILE_CHOOSER_ACTION_OPEN);
+	dialog.set_transient_for(*this);
+
+	dialog.add_button(Gtk::Stock::CANCEL, Gtk::RESPONSE_CANCEL);
+	dialog.add_button(Gtk::Stock::OPEN, Gtk::RESPONSE_OK);
+
+	Gtk::FileFilter filter;
+	filter.set_name("Xml files");
+	filter.add_mime_type("text/xml");
+	dialog.add_filter(filter);
+	
+	Gtk::FileFilter any_filter;
+	any_filter.set_name("Any files");
+	any_filter.add_pattern("*");
+	dialog.add_filter(any_filter);
+
+	if (dialog.run() == Gtk::RESPONSE_OK) {
+		*filename = dialog.get_filename();
+		return true;
+	}
+	
+	return false;
 }
 
 void GuiClient::on_add_sample_button_clicked() {

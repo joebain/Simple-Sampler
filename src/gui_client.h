@@ -20,12 +20,18 @@ class GuiClient : public Client, public Gtk::Window {
 		void on_sample_is_looping_toogled(const Glib::ustring& path);
 		void on_has_effect_toogled(const Glib::ustring& path);
 		void on_has_timestretch_toogled(const Glib::ustring& path);
+		void on_save_sample_config_button_clicked();
+		void on_save_pad_config_button_clicked();
 		
 		void init();
 		void refresh();
 		
+		bool get_xml_file(std::string* filename);
+		
 		Gtk::Button add_sample_button;
 		Gtk::Button load_pad_config_button;
+		Gtk::Button save_sample_config_button;
+		Gtk::Button save_pad_config_button;
 		Gtk::Button edit_bit_effect_button;
 		
 		Gtk::TextView message_window;
@@ -43,11 +49,15 @@ class GuiClient : public Client, public Gtk::Window {
 		SampleChoiceModel* choice_model;
 		
 		std::list<PadGui*> pad_guis;
+		PadGui* get_pad_gui(Pad pad);
 	public:
 		GuiClient(Server* server);
 		~GuiClient();
 		
 		void start();
+		void stop();
+		void update();
+		bool update_gtk();
 		
 		static void init_gtk(int argc, char *argv[]);
 	

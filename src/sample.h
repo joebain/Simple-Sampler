@@ -34,10 +34,8 @@ class Sample : public SoundMaker
 		
 		std::string filename;
 		std::string name;
-		float stopping_at;
-		float next_stop;
-		float next_start;
-		float last_play_from;
+		float start_point, end_point, next_start_point, next_end_point;
+		bool pad_down;
 		
 		float base_speed;
 		float playing_speed;
@@ -56,9 +54,15 @@ class Sample : public SoundMaker
 		void print_info();
 		void check_sf_errors();
 		
+		bool request_play();
+		void set_start_point(float position);
+		void set_end_point(float position);
+		void control();
+		void set_position(float position);
+		
 		bool play();
 		bool play(float position);
-		bool force_play(float position);
+		//~ bool force_play(float position);
 		bool stop();
 		
 		bool reset_required;
@@ -73,6 +77,8 @@ class Sample : public SoundMaker
 		bool sticky_loops;
 						
 		bool is_playing();
+		float get_position();
+		
 		void next_frames(float frames[], int length);
 		float next_frame();
 
