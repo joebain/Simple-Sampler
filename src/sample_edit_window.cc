@@ -1,25 +1,21 @@
 #include "sample_edit_window.h"
 
-SampleEditWindow::SampleEditWindow() {
+SampleEditWindow::SampleEditWindow() :
+	Gtk::Table(2,1),
+	button("Change color")
+{
 	already_changed = false;
-	//ClutterColor stage_color = { 0x00, 0x00, 0x00, 0xff }; /* Black */
+	ClutterColor stage_color = { 0x00, 0x00, 0x00, 0xff }; /* Black */
 
-	/* Create the window and some child widgets: */
-	
-	add(v_box);
-	
-	button.set_label("Change Color");
-	
-	v_box.pack_end(button);
+	attach(button, 0,1,1,2);
 	
 	button.signal_clicked().connect(sigc::mem_fun(*this,
               &SampleEditWindow::on_button_clicked));
 	
 
 	/* Create the clutter widget: */
-	//Gtk::Widget *clutter_widget = Glib::wrap(gtk_clutter_embed_new ());
-	
-	//v_box.pack_start(*clutter_widget, true, true, (guint) 0);
+	Gtk::Widget *clutter_widget = Glib::wrap(gtk_clutter_embed_new ());
+	attach(*clutter_widget, 0,1,0,1);
 	
 	/* Set the size of the widget, 
 	* because we should not set the size of its stage when using GtkClutterEmbed.
@@ -56,9 +52,7 @@ void SampleEditWindow::on_button_clicked ()
   already_changed = !already_changed;
 }
 
-static gboolean
-on_stage_button_press (ClutterStage *stage, ClutterEvent *event, gpointer user_data)
-{
+static gboolean on_stage_button_press (ClutterStage *stage, ClutterEvent *event, gpointer user_data) {
   gfloat x = 0;
   gfloat y = 0;
   clutter_event_get_coords (event, &x, &y);

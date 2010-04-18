@@ -48,6 +48,8 @@ class GuiClient : public Client, public Gtk::Window {
 		
 		BitEffectGui* bit_effect_gui;
 		Gtk::Window edit_bit_effect_window;
+		SampleEditWindow* sample_edit_gui;
+		Gtk::Window sample_edit_window;
 		
 		SampleChoiceModel* choice_model;
 		

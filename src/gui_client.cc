@@ -168,8 +168,10 @@ void GuiClient::on_save_pad_config_button_clicked() {
 }
 
 void GuiClient::on_splice_button_clicked() {
-	SampleEditWindow edit_window;
-	edit_window.show();
+	sample_edit_gui = new SampleEditWindow();
+	sample_edit_window.add(*sample_edit_gui);
+	sample_edit_window.show_all_children();
+	sample_edit_window.show();
 }
 
 bool GuiClient::get_xml_file(std::string* filename) {
