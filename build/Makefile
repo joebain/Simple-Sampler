@@ -14,8 +14,9 @@ MAIN_OBJ := $(BIN_DIR)/libsimple-sampler.a
 all: $(MAIN_EXE)
 #all: $(MAIN_EXE) $(MAIN_OBJ)
 
-CCFLAGS := $(COMMON_CCFLAGS) `pkg-config --cflags jack sndfile libxml++-2.6 rubberband gtkmm-2.4 gtk+-2.0 clutter-gtk-0.10 clutter-1.0`
-LIBS := `pkg-config --libs jack sndfile libxml++-2.6 rubberband gtkmm-2.4 gtk+-2.0 clutter-gtk-0.10 clutter-1.0` -lm
+LIBS := jack sndfile libxml++-2.6 rubberband gtkmm-2.4 cluttermm-0.9 clutter-gtkmm-0.9
+COMPILER_FLAGS := $(COMMON_CCFLAGS) `pkg-config --cflags $(LIBS) `
+INCLUDES := `pkg-config --libs $(LIBS) ` -lm
 
 SRC_FILES := $(wildcard $(SRC_DIR)/*.cc)
 OBJECT_FILES := $(notdir $(SRC_FILES:.cc=.o))
@@ -23,7 +24,7 @@ DEPENDENCY_FILES := $(notdir $(SRC_FILES:.cc=.d))
 
 #build the main exe
 $(MAIN_EXE): $(OBJECT_FILES)
-	$(CC) $(OBJECT_FILES) -o $(MAIN_EXE) $(LIBS)
+	$(CC) $(OBJECT_FILES) -o $(MAIN_EXE) $(INCLUDES)
 
 #build the main lib
 $(MAIN_OBJ): $(OBJECT_FILES)
@@ -38,7 +39,7 @@ $(DEPENDENCY_FILES): %.d: %.cc
 
 #Implicit rules to make sure our libraries are included and the desired gcc flags are used when compiling our objects.
 $(OBJECT_FILES): %.o: %.cc
-	$(CC) $(CCFLAGS) $(LIBS) $< -o $@
+	$(CC) $(COMPILER_FLAGS) $(INCLUDES) $< -o $@
 
 .PHONY: clean	
 clean:
