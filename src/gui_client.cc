@@ -26,6 +26,7 @@ GuiClient::GuiClient(Server* server) : Client(server) {
 	button_box.add(save_sample_config_button);
 	button_box.add(save_pad_config_button);
 	button_box.add(edit_bit_effect_button);
+	button_box.add(splice_button);
 
 	scrolled_window.add(message_window);
 	
@@ -51,8 +52,12 @@ GuiClient::GuiClient(Server* server) : Client(server) {
     edit_bit_effect_button.set_label("Edit effect");
 	edit_bit_effect_button.signal_clicked().connect(sigc::mem_fun(*this,
               &GuiClient::on_edit_bit_effect_button_clicked));
-
-	scrolled_window.set_policy(Gtk::POLICY_AUTOMATIC, Gtk::POLICY_AUTOMATIC);
+    
+    splice_button.set_label("Splice");
+	splice_button.signal_clicked().connect(sigc::mem_fun(*this,
+              &GuiClient::on_splice_button_clicked));
+    
+    scrolled_window.set_policy(Gtk::POLICY_AUTOMATIC, Gtk::POLICY_AUTOMATIC);
 	
 	sample_frame.set_label("Samples");
 	
@@ -160,6 +165,11 @@ void GuiClient::on_save_pad_config_button_clicked() {
 		refresh();
 		message_window.get_buffer()->insert_at_cursor("Saved pads\n");
 	}
+}
+
+void GuiClient::on_splice_button_clicked() {
+	SampleEditWindow edit_window;
+	edit_window.show();
 }
 
 bool GuiClient::get_xml_file(std::string* filename) {

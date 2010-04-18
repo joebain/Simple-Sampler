@@ -2,3 +2,6 @@
 *.d
 *.o
 simple-sampler
+*~
+*.kdev4
+*.ogg

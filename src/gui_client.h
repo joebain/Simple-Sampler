@@ -11,6 +11,7 @@
 
 #include "pad_gui.h"
 #include "bit_effect_gui.h"
+#include "sample_edit_window.h"
 
 class GuiClient : public Client, public Gtk::Window {
 	private:
@@ -22,6 +23,7 @@ class GuiClient : public Client, public Gtk::Window {
 		void on_has_timestretch_toogled(const Glib::ustring& path);
 		void on_save_sample_config_button_clicked();
 		void on_save_pad_config_button_clicked();
+		void on_splice_button_clicked();
 		
 		void init();
 		void refresh();
@@ -33,6 +35,7 @@ class GuiClient : public Client, public Gtk::Window {
 		Gtk::Button save_sample_config_button;
 		Gtk::Button save_pad_config_button;
 		Gtk::Button edit_bit_effect_button;
+		Gtk::Button splice_button;
 		
 		Gtk::TextView message_window;
 		Gtk::VBox v_box;

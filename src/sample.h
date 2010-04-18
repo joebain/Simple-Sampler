@@ -15,6 +15,8 @@ class Sample : public SoundMaker
 {
 	private:
 		SNDFILE* file;
+		int audio_data_index;
+		float *audio_data;
 		SF_INFO sfinfo;
 		
 		RubberBand::RubberBandStretcher* rubber_band;
@@ -45,6 +47,8 @@ class Sample : public SoundMaker
 		bool effect_on;
 		bool timestretch_on;
 		
+		bool rb_reset_required;
+		
 		void on_event(PadEvent e);
 		void off_event(PadEvent e);
 		bool try_add_event(PadEvent e);
@@ -65,7 +69,8 @@ class Sample : public SoundMaker
 		//~ bool force_play(float position);
 		bool stop();
 		
-		bool reset_required;
+		int try_get_frames(float* frames, int frames_requested);
+		void rubberband_process(float frames[], int length);
 	public:
 		Sample();
 		~Sample();

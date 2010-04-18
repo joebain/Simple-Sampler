@@ -14,8 +14,8 @@ MAIN_OBJ := $(BIN_DIR)/libsimple-sampler.a
 all: $(MAIN_EXE)
 #all: $(MAIN_EXE) $(MAIN_OBJ)
 
-CCFLAGS := $(COMMON_CCFLAGS) `pkg-config --cflags jack sndfile libxml++-2.6 rubberband gtkmm-2.4`
-LIBS := `pkg-config --libs jack sndfile libxml++-2.6 rubberband gtkmm-2.4` -lm
+CCFLAGS := $(COMMON_CCFLAGS) `pkg-config --cflags jack sndfile libxml++-2.6 rubberband gtkmm-2.4 gtk+-2.0 clutter-gtk-0.10 clutter-1.0`
+LIBS := `pkg-config --libs jack sndfile libxml++-2.6 rubberband gtkmm-2.4 gtk+-2.0 clutter-gtk-0.10 clutter-1.0` -lm
 
 SRC_FILES := $(wildcard $(SRC_DIR)/*.cc)
 OBJECT_FILES := $(notdir $(SRC_FILES:.cc=.o))

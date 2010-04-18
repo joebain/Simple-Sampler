@@ -2,6 +2,7 @@
 
 #include <iostream>
 #include <math.h>
+#include <string.h>
 
 #include <sndfile.h>
 #include <rubberband/RubberBandStretcher.h>
@@ -38,8 +39,14 @@ bool Sample::load(std::string filename)
     };
 	
 	total_frames = sfinfo.frames;
-	std::cout << "total frames " << total_frames << std::endl;
 	sample_rate = sfinfo.samplerate;
+	std::cout << "total frames " << total_frames << " sample rate: " << sample_rate << std::endl;
+	
+	//read sndfile data into a new array
+	audio_data = new float[total_frames];
+	audio_data_index = 0;
+	sf_readf_float(file, audio_data, total_frames);
+	check_sf_errors();
 	
 	rubber_band = new RubberBand::RubberBandStretcher(sample_rate, 1/*channels*/,
 			RubberBand::RubberBandStretcher::OptionProcessRealTime |
@@ -78,9 +85,10 @@ bool Sample::play() {
 void Sample::set_position(float position) {
 	if (position > 1 || position < 0) return;
 	int pos_i = position * total_frames;
-	sf_seek(file, pos_i, SEEK_SET); //current position in the file
+	audio_data_index = pos_i;
+	//sf_seek(file, pos_i, SEEK_SET); //current position in the file
 	
-	reset_required = true; //for rubberband
+	rb_reset_required = true; //for rubberband
 }
 
 void Sample::set_end_point(float position) {
@@ -272,11 +280,47 @@ void Sample::reset_pitch() {
 }
 
 float Sample::get_position() {
-	int pos_i = sf_seek(file, 0, SEEK_CUR); //current position in the file
+	//int pos_i = sf_seek(file, 0, SEEK_CUR); //current position in the file
+	int pos_i = audio_data_index;
 	if (pos_i != -1) {
 		return (float)pos_i / (float)total_frames;
 	}
 	return 1.0f;
+}
+
+int Sample::try_get_frames(float* frames, int frames_requested) {
+	//return sf_readf_float(file, frames, frames_requested);
+	int frames_available = total_frames - audio_data_index;
+	int frames_to_copy = frames_requested > frames_available ? frames_available : frames_requested;
+	
+	memcpy(frames, audio_data + audio_data_index, frames_to_copy * sizeof(float));
+	//for (int i = 0 ; i < frames_to_copy; i++) {
+	//	frames[i] = audio_data[audio_data_index+i];
+	//}
+	audio_data_index += frames_to_copy;
+	return frames_to_copy;
+}
+
+void Sample::rubberband_process(float frames[], int length) {
+	if (rb_reset_required) {
+		rubber_band->reset();
+		rb_reset_required = false;
+	}
+	while(rubber_band->available() < length) {
+		int frames_needed_by_rb = rubber_band->getSamplesRequired();
+		int frames_to_give_to_rb = length < frames_needed_by_rb ? length : frames_needed_by_rb;
+		
+		int frames_got_from_sf = try_get_frames(frames, frames_to_give_to_rb);
+		if (frames_got_from_sf != frames_to_give_to_rb) { //run out of file
+			rubber_band->retrieve(&frames, rubber_band->available());
+			return;
+		}
+		else {
+			rubber_band->process(&frames, frames_to_give_to_rb, false);
+		}
+	}
+	
+	rubber_band->retrieve(&frames, length);
 }
 
 void Sample::next_frames(float frames[], int length) {
@@ -285,36 +329,11 @@ void Sample::next_frames(float frames[], int length) {
 	
 	if (playing) {
 		
-		//rubberband
 		if (timestretch_on) {
-			if (reset_required) {
-				rubber_band->reset();
-				reset_required = false;
-			}
-			while(rubber_band->available() < length) {
-				int frames_needed_by_rb = rubber_band->getSamplesRequired();
-				int frames_to_give_to_rb = length < frames_needed_by_rb ? length : frames_needed_by_rb;
-				
-				int frames_got_from_sf = sf_readf_float(file, frames, frames_to_give_to_rb);
-				if (frames_got_from_sf != length) { //run out of file
-					check_sf_errors();
-					stop();
-					rubber_band->retrieve(&frames, rubber_band->available());
-					return;
-				}
-				rubber_band->process(&frames, frames_to_give_to_rb, false);
-			}
-			
-			rubber_band->retrieve(&frames, length);
+			rubberband_process(frames, length);
 		} else {
-			if (sf_readf_float(file, frames, length) != length) { //run out of file
-				//~ check_sf_errors();
-				//~ stop();
-				//~ return;
-			}
+			try_get_frames(frames, length);
 		}
-		
-		check_sf_errors();
 		
 		//other effect
 		if (effect && effect_on)

@@ -7,6 +7,9 @@
 
 #include <gtkmm.h>
 
+#include <clutter/clutter.h>
+#include <clutter-gtk/clutter-gtk.h>
+
 #include "server.h"
 #include "client.h"
 #include "gui_client.h"
@@ -45,6 +48,9 @@ int main (int argc, char *argv[]) {
 	//GuiClient::init_gtk(argc, argv);
 	Gtk::RC::add_default_file("data/themes/Elegant Brit/gtk-2.0/gtkrc");
 	Gtk::Main kit(argc, argv);
+	
+	//init clutter
+	gtk_clutter_init (&argc, &argv);
 	
 	client = new GuiClient(server);
 	
