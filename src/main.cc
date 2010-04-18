@@ -7,8 +7,8 @@
 
 #include <gtkmm.h>
 
-#include <clutter/clutter.h>
-#include <clutter-gtk/clutter-gtk.h>
+#include <cluttermm.h>
+#include <clutter-gtkmm.h>
 
 #include "server.h"
 #include "client.h"
@@ -19,23 +19,6 @@ Server* server;
 
 void* start_server(void* args) {
 	server->start();
-	std::cout << "done server" << std::endl;
-	return NULL;
-}
-
-void* start_client(void* args) {
-	client->start();
-	std::cout << "done client" << std::endl;
-	return NULL;
-}
-
-void* run_client(void* args) {
-	client->running = true;
-	while (client->running) {
-		client->update();
-		sleep(0.01); //just be reasonable now
-	}
-	std::cout << "stopped client" << std::endl;
 	return NULL;
 }
 
@@ -44,25 +27,24 @@ int main (int argc, char *argv[]) {
 	
 	//client = new Client(server);
 	
+	//init clutter
+	Clutter::Gtk::init(&argc, &argv);
+	
 	//for some reason it doesn't work calling init_gtk ??
 	//GuiClient::init_gtk(argc, argv);
 	Gtk::RC::add_default_file("data/themes/Elegant Brit/gtk-2.0/gtkrc");
 	Gtk::Main kit(argc, argv);
 	
-	//init clutter
-	gtk_clutter_init (&argc, &argv);
 	
 	client = new GuiClient(server);
 	
-	pthread_t thread1, thread2, thread3;
+	pthread_t thread1;
 
 	pthread_create( &thread1, NULL, start_server, NULL);
-	pthread_create( &thread2, NULL, start_client, NULL);
-	//pthread_create( &thread3, NULL, run_client, NULL);
-
-	pthread_join( thread1, NULL);
-	pthread_join( thread2, NULL);
-	//pthread_join( thread3, NULL);
+		
+	client->start();
 	
+	pthread_join( thread1, NULL);
+			
 	return 0;
 }

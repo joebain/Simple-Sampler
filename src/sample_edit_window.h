@@ -3,25 +3,23 @@
 
 #include <gtkmm.h>
 
-#include <gtk/gtk.h>
-#include <clutter/clutter.h>
-#include <clutter-gtk/clutter-gtk.h>
+#include <cluttermm.h>
+#include <clutter-gtkmm.h>
 #include <stdlib.h>
 
-class SampleEditWindow : public Gtk::Table
+class SampleEditWindow : public Gtk::VBox
 {
 public:
     SampleEditWindow();
 private:
-    ClutterActor *stage;
-    void on_button_clicked();
+    Clutter::Gtk::Embed embed_;
+	Glib::RefPtr<Clutter::Stage> stage_;
+	Gtk::Button button;
+	bool colored_;
 
-    Gtk::Button button;
-
-    bool already_changed;
+	void on_button_clicked();
+	static bool on_stage_button_press(Clutter::ButtonEvent* event);
 
 };
-
-static gboolean on_stage_button_press (ClutterStage *stage, ClutterEvent *event, gpointer user_data);
 
 #endif

@@ -1,63 +1,43 @@
 #include "sample_edit_window.h"
 
+#include <iostream>
+
 SampleEditWindow::SampleEditWindow() :
-	Gtk::Table(2,1),
-	button("Change color")
+	Gtk::VBox(false, 6),
+	button("Change colour")
 {
-	already_changed = false;
-	ClutterColor stage_color = { 0x00, 0x00, 0x00, 0xff }; /* Black */
+	pack_end(button, Gtk::PACK_SHRINK);
 
-	attach(button, 0,1,1,2);
-	
-	button.signal_clicked().connect(sigc::mem_fun(*this,
-              &SampleEditWindow::on_button_clicked));
-	
+	pack_start(embed_, Gtk::PACK_EXPAND_WIDGET);
+ 	embed_.set_size_request(200, 200);
 
-	/* Create the clutter widget: */
-	Gtk::Widget *clutter_widget = Glib::wrap(gtk_clutter_embed_new ());
-	attach(*clutter_widget, 0,1,0,1);
-	
-	/* Set the size of the widget, 
-	* because we should not set the size of its stage when using GtkClutterEmbed.
-	*/ 
-	//clutter_widget->set_size_request(200,200);
-	
-	/* Get the stage and set its size and color: */
-	//stage = gtk_clutter_embed_get_stage (GTK_CLUTTER_EMBED (clutter_widget->gobj()));
-	//clutter_stage_set_color (CLUTTER_STAGE (stage), &stage_color);
+	button.signal_clicked().connect(sigc::mem_fun(*this, &SampleEditWindow::on_button_clicked));
 
-	/* Show the stage: */
-	//clutter_actor_show (stage);
+	stage_ = embed_.get_stage();
+	stage_->reference();
+	stage_->set_color(Clutter::Color(0, 0, 0)); // black
+	stage_->signal_button_press_event().connect(&SampleEditWindow::on_stage_button_press);
 
-	/* Connect a signal handler to handle mouse clicks and key presses on the stage: */ 
-	//g_signal_connect (stage, "button-press-event",
-	//G_CALLBACK (on_stage_button_press), NULL);
-	
 	show_all();
+	stage_->show();
 }
+
+bool SampleEditWindow::on_stage_button_press(Clutter::ButtonEvent* event)
+{
+	float x = 0;
+	float y = 0;
+	// TODO: Wrap properly
+	clutter_event_get_coords(reinterpret_cast<Clutter::Event*>(event), &x, &y);
+
+	std::cout << "Stage clicked at (" << x << ", " << y << ")\n";
+
+	return true; // stop further handling of this event
+}
+
 
 void SampleEditWindow::on_button_clicked ()
 {
-  if(already_changed)
-  {
-    //~ ClutterColor stage_color = { 0x00, 0x00, 0x00, 0xff }; /* Black */
-    //~ clutter_stage_set_color (CLUTTER_STAGE (stage), &stage_color);
-  }
-  else
-  {
-    //~ ClutterColor stage_color = { 0x20, 0x20, 0xA0, 0xff };
-    //~ clutter_stage_set_color (CLUTTER_STAGE (stage), &stage_color);
-  }
-
-  already_changed = !already_changed;
-}
-
-static gboolean on_stage_button_press (ClutterStage *stage, ClutterEvent *event, gpointer user_data) {
-  gfloat x = 0;
-  gfloat y = 0;
-  clutter_event_get_coords (event, &x, &y);
-
-  g_print ("Stage clicked at (%f, %f)\n", x, y);
-
-  return TRUE; /* Stop further handling of this event. */
+	colored_ = !colored_;
+	stage_->set_color((colored_) ? Clutter::Color(32, 32, 160)
+		: Clutter::Color(0, 0, 0));
 }

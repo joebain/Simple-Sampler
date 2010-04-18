@@ -6,6 +6,7 @@
 
 #include "pad_gui.h"
 #include "sample_choice_model.h"
+#include "stage_window.h"
 
 GuiClient::GuiClient(Server* server) : Client(server) {
 		
@@ -170,7 +171,6 @@ void GuiClient::on_save_pad_config_button_clicked() {
 void GuiClient::on_splice_button_clicked() {
 	sample_edit_gui = new SampleEditWindow();
 	sample_edit_window.add(*sample_edit_gui);
-	sample_edit_window.show_all_children();
 	sample_edit_window.show();
 }
 
