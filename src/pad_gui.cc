@@ -25,9 +25,8 @@ PadGui::PadGui(Pad& pad, SampleChoiceModel* choice_model) :
 			sigc::mem_fun(*this, &PadGui::on_play_button_clicked)
 			);
 
-	sample_choice.set_model(choice_model->ref_tree_model);
-
 	//combo box
+   sample_choice.set_model(choice_model->ref_tree_model);
 	sample_choice.pack_start(choice_model->name_column);
 	sample_choice.signal_changed().connect(
 			sigc::mem_fun(*this, &PadGui::on_sample_choice_changed)

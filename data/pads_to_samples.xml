@@ -4,10 +4,11 @@
 	<pad id="3" start="0.5f" end="0.75f" sample_id="1" />
 	<pad id="4" start="0.75f" end="1.0f" sample_id="1" />
 	<pad id="5" start="1.0f" end="1.0f" sample_id="1" />
-
+<!--
 	<pad id="7" start="0.0f" end="0.25f" sample_id="2" />
 	<pad id="8" start="0.25f" end="0.5f" sample_id="2" />
 	<pad id="9" start="0.5f" end="0.75f" sample_id="2" />
 	<pad id="10" start="0.75f" end="1.0f" sample_id="2" />
 	<pad id="11" start="1.0f" end="1.0f" sample_id="2" />
+-->
 </pads_to_samples>

@@ -114,6 +114,9 @@ class Sample : public SoundMaker
 		
 		bool timestretch_enabled() { return timestretch_on; }
 		void set_timestretch_on(bool value) { timestretch_on = value; }
+      
+      int get_length() { return total_frames; }
+      const float* get_frames() { return audio_data; }
 };
 
 #endif // _SAMPLE_H_

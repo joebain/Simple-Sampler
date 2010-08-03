@@ -1,4 +1,5 @@
+<?xml version="1.0"?>
 <samples>
-	<sample filename="ifineededs48000.wav" id="1"></sample>
-	<sample filename="sgtpprrant48000.wav" id="2"></sample>
+   <sample filename="ifineededs48000.wav" id="1"/>
+   <!--<sample filename="sgtpprrant48000.wav" id="2"/>-->
 </samples>

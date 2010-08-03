@@ -4,24 +4,43 @@
 #include <gtkmm.h>
 
 #include <gtk/gtk.h>
-#include <clutter/clutter.h>
-#include <clutter-gtk/clutter-gtk.h>
 #include <stdlib.h>
+#include <iostream>
+
+#include <SDL/SDL.h>
+#include <GL/gl.h>
+
+#include "sample_choice_model.h"
 
 class SampleEditWindow : public Gtk::Table
 {
 public:
-    SampleEditWindow();
+    SampleEditWindow(SampleChoiceModel* samples);
+    
+    void run();
+    void init_gfx();
+    bool running;
 private:
-    ClutterActor *stage;
     void on_button_clicked();
-
+   void update();
+   void draw_sample(Sample* sample);
+   void on_sample_choice_changed();
+    
+   Gtk::ComboBox sample_choice; 
     Gtk::Button button;
+    SDL_Surface *surface;
 
     bool already_changed;
-
+    
+    int win_height;
+   int win_width;
+   
+   pthread_t gl_thread;
+   
+   SampleChoiceModel* samples;
+   Sample* sample;
 };
 
-static gboolean on_stage_button_press (ClutterStage *stage, ClutterEvent *event, gpointer user_data);
+void* run_edit_window(void* args);
 
 #endif
