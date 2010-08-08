@@ -87,6 +87,11 @@ void PadGui::update() {
 	} else {
 		unhighlight();
 	}
+    
+    if (start_position_spinner.get_value() != pad.start_position)
+        start_position_spinner.set_value(pad.start_position);
+    if (end_position_spinner.get_value() != pad.end_position)
+        end_position_spinner.set_value(pad.end_position);
 }
 
 void PadGui::highlight() {

@@ -22,6 +22,7 @@ protected:
 	bool load_samples(std::string filename);
 	bool save_samples(std::string filename);
 	bool load_sample(std::string filename);
+    bool new_sample();
 	bool link_pads_to_samples(std::string filename);
 
 private:

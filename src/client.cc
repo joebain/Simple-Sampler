@@ -13,7 +13,7 @@ Client::Client(Server* server) {
 void Client::start() {
 	
 	while (!server->get_jack()->is_ready()) {
-		sleep(0.2);
+		usleep(20);
 	}
 	server->get_jack()->start();
 	
@@ -47,6 +47,14 @@ bool Client::load_samples(std::string filename) {
 bool Client::load_sample(std::string filename) {
 	Sample sample;
 	if (!Loader::load_sample(filename, sample)) return false;
+	return server->add_sample(sample);
+}
+
+bool Client::new_sample() {
+	Sample sample;
+    sample.init_empty();
+	sample.id = server->get_new_sample_id();
+    
 	return server->add_sample(sample);
 }
 

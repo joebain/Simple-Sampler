@@ -8,6 +8,7 @@ Pad::Pad(int event_number, int id) {
 	start_position = 0.0f;
 	end_position = 1.0f;
 	has_a_sample = false;
+    sample_has_changed = false;
 }
 
 void Pad::hit(float velocity) {
@@ -28,6 +29,18 @@ bool Pad::is_playing() const {
 	if (!sample->is_playing()) return false;
 	float pos = sample->get_position();
 	return pos > start_position && pos <= end_position && pos != 0 && pos != 1;
+}
+
+void Pad::set_sample(Sample* sample) {
+    this->sample = sample;
+    has_a_sample = true;
+    sample_has_changed = true;
+}
+
+bool Pad::has_sample_changed() {
+    bool tmp = sample_has_changed;
+    sample_has_changed = false;
+    return tmp;
 }
 
 void Pad::release() {

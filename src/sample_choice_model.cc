@@ -6,6 +6,7 @@ SampleChoiceModel::SampleChoiceModel(std::list<Sample> & samples) {
 	add(is_looping_column);
 	add(has_effect_column);
 	add(has_timestretch_column);
+    add(is_recording_column);
 	
 	ref_tree_model = Gtk::ListStore::create(*this);
 	
@@ -28,4 +29,5 @@ void SampleChoiceModel::add_sample(Sample* sample) {
 	row[is_looping_column] = sample->sticky_loops;
 	row[has_effect_column] = sample->effect_enabled();
 	row[has_timestretch_column] = sample->timestretch_enabled();
+    row[is_recording_column] = sample->is_recording();
 }

@@ -13,8 +13,10 @@ Sample::Sample() {
 	playing = false;
 	looping = false;
 	effect_on = false;
+    recording_on = false;
 	timestretch_on = false;
 	sticky_loops = false;
+    expandable = false;
 	
 	next_end_point = 1.0;
 	next_start_point = 0.0;
@@ -25,6 +27,17 @@ Sample::Sample() {
 	playing_speed = 1.0;
 	base_pitch = 1.0;
 	playing_pitch = 1.0;
+}
+
+void Sample::init_empty() {
+    filename = "new sample.wav";
+    total_frames = 48000;
+    sample_rate = 48000;
+    audio_data = new float[total_frames];
+    audio_data_index = 0;
+    expandable = true;
+    
+    init_rubberband();
 }
 
 bool Sample::load(std::string filename)
@@ -48,12 +61,16 @@ bool Sample::load(std::string filename)
 	sf_readf_float(file, audio_data, total_frames);
 	check_sf_errors();
 	
-	rubber_band = new RubberBand::RubberBandStretcher(sample_rate, 1/*channels*/,
+    init_rubberband();
+    
+	return true;
+}
+
+void Sample::init_rubberband() {
+    rubber_band = new RubberBand::RubberBandStretcher(sample_rate, 1/*channels*/,
 			RubberBand::RubberBandStretcher::OptionProcessRealTime |
 			RubberBand::RubberBandStretcher::OptionWindowLong );
 	//rubber_band->setDebugLevel(3);
-	
-	return true;
 }
 
 void Sample::control() {
@@ -102,6 +119,7 @@ void Sample::set_start_point(float position) {
 }
 
 bool Sample::request_play() {
+    if (recording_on) return false;
 	std::cout << "play request" << std::endl;
 	//if (!playing) {
 	if (next_start_point == start_point) {
@@ -345,6 +363,19 @@ void Sample::check_sf_errors() {
 	if (sf_error(file) != 0) {
 		std::cerr << "there was an error getting sound data (" << sf_strerror(file) << ")" << std::endl;
 	}
+}
+
+void Sample::record_frames(float* frames, int frames_requested) {
+    int frames_to_copy;
+    int frames_available = total_frames - audio_data_index;
+    if (frames_requested > frames_available) {
+        frames_to_copy = frames_available;
+        stop_recording();
+    } else {
+        frames_to_copy = frames_requested;
+    }
+    memcpy(audio_data + audio_data_index, frames, frames_to_copy * sizeof(float));
+    audio_data_index += frames_to_copy;
 }
 
 bool Sample::is_playing() {

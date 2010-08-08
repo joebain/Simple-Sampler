@@ -17,16 +17,20 @@ GuiClient::GuiClient(Server* server) : Client(server) {
 	v_paned.add1(sample_table);
 	v_paned.add2(v_box);
 	
-	v_box.pack_start(button_box);
+	v_box.pack_start(button_box1);
+    v_box.pack_start(button_box2);
+    v_box.pack_start(button_box3);
 	v_box.pack_start(scrolled_window);
 	v_box.pack_start(sample_frame);
 	
-	button_box.add(add_sample_button);
-	button_box.add(load_pad_config_button);
-	button_box.add(save_sample_config_button);
-	button_box.add(save_pad_config_button);
-	button_box.add(edit_bit_effect_button);
-	button_box.add(splice_button);
+    
+	button_box1.add(load_pad_config_button);
+	button_box1.add(save_sample_config_button);
+	button_box1.add(save_pad_config_button);
+	button_box2.add(edit_bit_effect_button);
+	button_box2.add(splice_button);
+    button_box3.add(add_sample_button);
+    button_box3.add(new_sample_button);
 
 	scrolled_window.add(message_window);
 	
@@ -56,6 +60,10 @@ GuiClient::GuiClient(Server* server) : Client(server) {
     splice_button.set_label("Splice");
 	splice_button.signal_clicked().connect(sigc::mem_fun(*this,
               &GuiClient::on_splice_button_clicked));
+    
+    new_sample_button.set_label("New sample");
+    new_sample_button.signal_clicked().connect(sigc::mem_fun(*this,
+                &GuiClient::on_new_sample_button_clicked));
     
     scrolled_window.set_policy(Gtk::POLICY_AUTOMATIC, Gtk::POLICY_AUTOMATIC);
 	
@@ -106,6 +114,12 @@ bool GuiClient::update_gtk() {
 			; pad_gui != pad_guis.end() ; ++pad_gui) {
 		(*pad_gui)->update();
 	}
+    
+    Gtk::TreeModel* sample_model = sample_list_view.get_model();
+    for (Gtk::TreeModel::iterator iter = sample_model->get_iter();
+            iter != sample_model->end(); ++iter) {
+        std::cout << "poop" << std::endl;
+    }
 	
 	return true;
 }
@@ -168,10 +182,15 @@ void GuiClient::on_save_pad_config_button_clicked() {
 }
 
 void GuiClient::on_splice_button_clicked() {
-	sample_edit_gui = new SampleEditWindow(choice_model);
+	sample_edit_gui = new SampleEditWindow(choice_model, server);
 	sample_edit_window.add(*sample_edit_gui);
 	sample_edit_window.show_all_children();
 	sample_edit_window.show();
+}
+
+void GuiClient::on_new_sample_button_clicked() {
+    new_sample();
+    refresh();
 }
 
 bool GuiClient::get_xml_file(std::string* filename) {
@@ -270,8 +289,22 @@ void GuiClient::on_has_timestretch_toogled(const Glib::ustring& path) {
 	sample->set_timestretch_on(has_timestretch);
 }
 
-void GuiClient::init() {
-	//sample model
+void GuiClient::on_is_recording_toggled(const Glib::ustring& path) {
+	Gtk::TreeModel::iterator iter = sample_list_view.get_model()->get_iter(path);
+	if(!iter) return;
+	Gtk::TreeModel::Row row = *iter;
+	if(!row) return;
+	Sample* sample = row[choice_model->sample_column];
+	bool is_recording = row[choice_model->is_recording_column];
+	if (is_recording) {
+        sample->start_recording();
+    } else {
+        sample->stop_recording();
+    }
+}
+
+void GuiClient::init_sample_list() {
+    //sample model
 	choice_model = new SampleChoiceModel (server->get_samples());
 	
 	//main sample list
@@ -311,8 +344,21 @@ void GuiClient::init() {
 		toggle_renderer->signal_toggled().connect
 			( sigc::mem_fun(*this, &GuiClient::on_has_timestretch_toogled) );
 	}
+    
+    //toggle recording
+	view_column = sample_list_view.append_column_editable("recording", choice_model->is_recording_column);	
+	renderer = sample_list_view.get_column_cell_renderer(view_column - 1);
+	toggle_renderer =
+		dynamic_cast<Gtk::CellRendererToggle *>(renderer);
+	if (toggle_renderer)
+	{
+		toggle_renderer->signal_toggled().connect
+			( sigc::mem_fun(*this, &GuiClient::on_is_recording_toggled) );
+	}
+}
 
-	//pads
+void GuiClient::init_pads() {
+    //pads
 	//----
 	std::list<Pad> & pads = server->get_pads();
 	for (std::list<Pad>::iterator pi = pads.begin() ;
@@ -324,7 +370,12 @@ void GuiClient::init() {
 		int y = pi->get_y();
 		sample_table.attach(*(pad_guis.back()),x,x+1,y,y+1);
 	}
-	
+}
+
+void GuiClient::init() {
+	init_sample_list();
+    init_pads();
+
 	show_all_children();
 }
 

@@ -46,6 +46,9 @@ class Sample : public SoundMaker
 		
 		bool effect_on;
 		bool timestretch_on;
+        bool recording_on;
+        
+        bool expandable;
 		
 		bool rb_reset_required;
 		
@@ -64,19 +67,23 @@ class Sample : public SoundMaker
 		void control();
 		void set_position(float position);
 		
-		bool play();
-		bool play(float position);
-		//~ bool force_play(float position);
-		bool stop();
-		
+        void init_rubberband();
+        
 		int try_get_frames(float* frames, int frames_requested);
 		void rubberband_process(float frames[], int length);
 	public:
 		Sample();
 		~Sample();
 		
+        bool play();
+		bool play(float position);
+		//~ bool force_play(float position);
+		bool stop();
+        
 		bool load(std::string filename);
+        void init_empty();
 		
+        
 		bool give_event(PadEvent e);
 		
 		bool sticky_loops;
@@ -117,6 +124,18 @@ class Sample : public SoundMaker
       
       int get_length() { return total_frames; }
       const float* get_frames() { return audio_data; }
+      
+      int id;
+      
+      bool is_recording() { return recording_on; }
+      void start_recording() {
+          recording_on = true;
+          stop();
+          set_position(0.0f);
+      }
+      void stop_recording() { recording_on = false; }
+      
+      void record_frames(float* frames, int length);
 };
 
 #endif // _SAMPLE_H_

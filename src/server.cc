@@ -11,6 +11,7 @@ Server::Server() {
 	jack = new Jack();
 	bit_effect = new BitEffect(1);
 	add_bit_effect(*bit_effect);
+    samples_to_pads_lock = 0;
 }
 
 Server::~Server() {
@@ -19,14 +20,31 @@ Server::~Server() {
 
 bool Server::start() {
 	jack->connect();
-	working_frames = new float[jack->buffer_size()];
+	outbound_frames = new float[jack->buffer_size()];
+    
 	running = true;
 	
 	while (running) {
-		sleep(1);
+		usleep(10);
+        update();
 	}
 	
 	return true;
+}
+
+void Server::update() {
+    bool refresh_sample_pad_links = false;
+	for (std::list<Pad>::iterator pad = pads.begin() ;
+        pad != pads.end() ; ++pad)
+    {
+        if (pad->has_sample_changed()) {
+            std::cout << "sample has changed: " << pad->get_sample()->get_name() << std::endl;
+            refresh_sample_pad_links = true;
+        }
+    }
+    if (refresh_sample_pad_links) {
+        link_samples_to_pads();
+    }
 }
 
 bool Server::stop() {
@@ -34,7 +52,7 @@ bool Server::stop() {
 	
 	jack->close();
 	
-	delete working_frames;
+	delete outbound_frames;
 
 	return true;
 }
@@ -66,6 +84,16 @@ bool Server::add_samples(std::list<Sample> new_samples) {
 	}
 	
 	return true;
+}
+
+int Server::get_new_sample_id() {
+    int id = 0;
+    for (std::list<Sample>::iterator sample = samples.begin(); sample != samples.end() ; ++sample) {
+        if (sample->id >= id) {
+            id = sample->id + 1;
+        }
+    }
+    return id;
 }
 
 bool Server::remove_sound_maker(SoundMaker* sound_maker) {
@@ -133,21 +161,30 @@ bool Server::remove_synth(Synth synth) {
 
 void Server::get_frames(float frames[], int length) {
 	
-	if (working_frames == NULL) return;
+	if (outbound_frames == NULL) return;
 	
 	for (int i = 0; i < length ; i++) {
-		working_frames[i] = 0.0f;
+		outbound_frames[i] = 0.0f;
 	}
 		
 	for (std::list<SoundMaker*>::iterator sound_maker = sound_makers.begin() ;
 			sound_maker != sound_makers.end() ; ++sound_maker) {
 		if ((*sound_maker)->is_playing()) {
-			(*sound_maker)->next_frames(working_frames, length);
+			(*sound_maker)->next_frames(outbound_frames, length);
 			for (int a = 0; a < length ; a++) {
-				frames[a] += working_frames[a];
+				frames[a] += outbound_frames[a];
 			}	
 		}
 	}
+}
+
+void Server::take_frames(float frames[], int length) {
+    for (std::list<Sample>::iterator sample = samples.begin() ;
+			sample != samples.end() ; ++sample) {
+        if (sample->is_recording()) {
+            sample->record_frames(frames, length);
+        }
+    }
 }
 
 SoundMaker* Server::get_sound_maker(int id) {
@@ -245,6 +282,7 @@ void Server::set_pads(std::list<Pad> new_pads) {
 void Server::add_pad(Pad pad) {
 	pads.push_back(pad);
 	events_to_pads[pad.get_event_number()] = &(pads.back());
+    std::cout << "added a pad: " << pad.get_event_number() << std::endl;
 }
 
 bool Server::add_bit_effect(BitEffect effect) {
@@ -296,4 +334,34 @@ bool Server::remove_effect(Effect* effect) {
 bool Server::add_effect(Effect* effect) {
 	effects.push_back(effect);
 	return true;
+}
+
+void Server::link_samples_to_pads() {
+    
+    ++samples_to_pads_lock;
+    std::cout << "lock: " << samples_to_pads_lock << std::endl;
+    samples_to_pads.clear();
+    for (std::list<Sample>::iterator sample = samples.begin() ;
+        sample != samples.end() ; ++sample)
+    {
+        samples_to_pads[sample->id] = *(new std::list<Pad*>());
+        for (std::list<Pad>::iterator pad = pads.begin() ;
+            pad != pads.end() ; ++pad)
+        {
+            if (pad->sample_is_set()) {
+                if (pad->get_sample()->id == sample->id) {
+                    samples_to_pads[sample->id].push_back(&(*pad));
+                }
+            }
+        }
+    }
+    --samples_to_pads_lock;
+}
+
+std::list<Pad*> Server::get_pads_for_sample(Sample* sample) {
+    
+    ++samples_to_pads_lock;
+    //std::cout << "lock: " << samples_to_pads_lock << std::endl;
+    return samples_to_pads[sample->id];
+    --samples_to_pads_lock;
 }

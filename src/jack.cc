@@ -9,8 +9,8 @@
 #include "server.h"
 
 Jack::Jack() {
-	input_port_name = "audio_out";
-	output_port_name = "audio_in";
+	input_port_name = "audio_in";
+	output_port_name = "audio_out";
 	input_midi_port_name = "midi_in";
 	output_midi_port_name = "midi_out";
 	client_name = "sampler";
@@ -60,7 +60,7 @@ bool Jack::connect() {
 					JACK_DEFAULT_AUDIO_TYPE,
 					JackPortIsOutput, 0);
 	
-	if ((output_port == NULL)) {// || (input_port == NULL)) {
+	if ((output_port == NULL) || (input_port == NULL)) {
 		std::cerr << "unable to register jack audio ports" << std::endl;
 		return false;
 	}
@@ -103,6 +103,10 @@ bool Jack::start() {
 	
 	if (jack_connect (client, jack_port_name (output_port), ports[0])) {
 		std::cerr << "cannot connect output port" << std::endl;
+	}
+    
+    if (jack_connect (client, jack_port_name (input_port), ports[0])) {
+		std::cerr << "cannot connect input port" << std::endl;
 	}
 	
 	delete ports;
@@ -148,6 +152,8 @@ int jack_process_cb (jack_nframes_t nframes, void *arg) {
 	}
 	
 	/* audio */
+    
+    /* output */
 	jack_default_audio_sample_t *out =
 		(jack_default_audio_sample_t *) 
 			jack_port_get_buffer(jack->get_output_port(), nframes);
@@ -157,8 +163,15 @@ int jack_process_cb (jack_nframes_t nframes, void *arg) {
 	}
 	
 	server->get_frames(out, nframes);
+    
+    /* input */
+    jack_default_audio_sample_t *in =
+		(jack_default_audio_sample_t *) 
+			jack_port_get_buffer(jack->get_input_port(), nframes);
+    
+    server->take_frames(in, nframes);
 	
-	return 0;      
+	return 0;
 }
 
 int jack_bufsize_cb(jack_nframes_t nframes, void *arg) {

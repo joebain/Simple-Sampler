@@ -18,6 +18,7 @@ class SampleChoiceModel : public Gtk::TreeModel::ColumnRecord {
 		Gtk::TreeModelColumn<bool> is_looping_column;
 		Gtk::TreeModelColumn<bool> has_effect_column;
 		Gtk::TreeModelColumn<bool> has_timestretch_column;
+        Gtk::TreeModelColumn<bool> is_recording_column;
 		
 		void set_samples(std::list<Sample> & samples);
 		void add_sample(Sample* sample);

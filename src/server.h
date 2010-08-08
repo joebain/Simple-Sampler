@@ -17,9 +17,13 @@ class Server {
 	private:
 		bool running;
 	
+        void update();
+    
 		Jack* jack;
 
-		float* working_frames;
+		float* outbound_frames;
+        
+        int samples_to_pads_lock;
 
 		std::list<SoundMaker*> sound_makers;
 		std::list<Synth> synths;
@@ -31,12 +35,14 @@ class Server {
 		
 		std::list<Pad> pads;
 		std::map<int, Pad*> events_to_pads;
+        std::map<int, std::list<Pad*> > samples_to_pads;
 		
 		bool remove_sound_maker(SoundMaker* sound_maker);
 		bool add_sound_maker(SoundMaker* sound_maker);
 		
 		bool remove_effect(Effect* effect);
 		bool add_effect(Effect* effect);
+        
 	public:
 		Server();
 		~Server();
@@ -51,12 +57,17 @@ class Server {
 		Jack* get_jack() {return jack;}
 		
 		void get_frames(float frames[], int length);
+        void take_frames(float frames[], int length);
 
 		bool add_sample(Sample sample);
 		bool add_samples(std::list<Sample> sample);
 		std::list<Sample> & get_samples() { return samples; }
 		bool remove_sample(Sample sample);
-		
+        int get_new_sample_id();
+		void link_samples_to_pads();
+        
+        std::list<Pad*> get_pads_for_sample(Sample* sample);
+        
 		bool add_bit_effect(BitEffect effect);
 		bool add_bit_effects(std::list<BitEffect> effect);
 		std::list<BitEffect> & get_bit_effects() { return bit_effects; }

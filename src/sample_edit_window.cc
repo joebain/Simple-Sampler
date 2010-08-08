@@ -1,12 +1,19 @@
 #include "sample_edit_window.h"
 
-SampleEditWindow::SampleEditWindow(SampleChoiceModel* samples) :
+SampleEditWindow::SampleEditWindow(SampleChoiceModel* samples, Server* server) :
 	Gtk::Table(2,1),
 	button("Change color")
 {
    sample = NULL;
+    click_distance = 6;
+    view_offset = 50;
+   
+    is_dragging_pad = false;
+   dragged_pad = NULL;
+   drag_location_y = 0.0f;
    
    this->samples = samples;
+   this->server = server;
    
    //combo box
    attach(sample_choice, 0,1,0,1);
@@ -74,8 +81,8 @@ void SampleEditWindow::init_gfx() {
 
     /* get a SDL surface */
    int screen_bpp = 32;
-   win_height = 300;
-   win_width = 300;
+   win_height = 200;
+   win_width = 800;
    surface = SDL_SetVideoMode(win_width, win_height, screen_bpp, videoFlags);
 }
 
@@ -94,6 +101,19 @@ void SampleEditWindow::run() {
 			switch(event.type){
 				case SDL_QUIT:
                running = false;
+               break;
+               case SDL_MOUSEBUTTONDOWN:
+               if (event.button.button == SDL_BUTTON_LEFT) {
+                   on_mouse_down(event.button.x, event.button.y);
+               }
+               break;
+               case SDL_MOUSEBUTTONUP:
+               if (event.button.button == SDL_BUTTON_LEFT) {
+                   on_mouse_up(event.button.x, event.button.y);
+               }
+               break;
+               case SDL_MOUSEMOTION:
+               on_mouse_drag(event.motion.x, event.motion.y);
                break;
          }
       }
@@ -114,7 +134,7 @@ void SampleEditWindow::run() {
 			SDL_ClearError();
 		}
       
-      sleep(1.0);
+      usleep(10);
    }
 }
 
@@ -128,8 +148,31 @@ void SampleEditWindow::update() {
    
    glLoadIdentity();
    
+   float scale = ((float)win_width-view_offset*2.0f)/(float)win_width;
+   float offset = screen_width_to_gl(view_offset);
+   
    glTranslatef(-1.0f,-1.0f,0.0f);
-   glScalef(2.0f,2.0f,0.0f);
+   glScalef(2.0f,2.0f,1.0f);
+   
+   
+   glScalef(scale,1.0f,1.0f);
+   glTranslatef(offset,0.0f,0.0f);
+   
+   glColor3f(0.5f,0.5f,0.5f);
+   
+   glBegin(GL_TRIANGLE_STRIP);
+   glVertex2f(-offset, 0.0f);
+   glVertex2f(-offset, 1.0f);
+   glVertex2f(0.0f, 0.0f);
+   glVertex2f(0.0f, 1.0f);
+   glEnd();
+   
+   glBegin(GL_TRIANGLE_STRIP);
+   glVertex2f(1.0f+offset, 0.0f);
+   glVertex2f(1.0f+offset, 1.0f);
+   glVertex2f(1.0f, 0.0f);
+   glVertex2f(1.0f, 1.0f);
+   glEnd();
    
    if (sample != NULL) {
       draw_sample(sample);
@@ -143,12 +186,136 @@ void SampleEditWindow::draw_sample(Sample* sample) {
    glColor3f(1.0f,0.0f,0.0f);
    glBegin(GL_POINTS);
    int length = sample->get_length();
-   float spacing = 2.0f / length;
+   float spacing = 1.0f / length;
    const float* data = sample->get_frames();
-   for(int i = 0; i < length; i++) {
+   for(int i = 0; i < length; i+=5) {
       glVertex2f(i*spacing, data[i]/2.0f + 0.5f);
    }
    glEnd();
+   
+   glBegin(GL_LINES);
+   glColor3f(0.0f,0.0f,1.0f);
+   float pos = sample->get_position();
+   glVertex2f(pos, 0.0f);
+   glVertex2f(pos, 1.0f);
+   glEnd();
+   
+   float fin_width = screen_width_to_gl(10);
+   float fin_height = screen_height_to_gl(10);
+   
+   std::list<Pad*> pads = server->get_pads_for_sample(sample);
+    for (std::list<Pad*>::iterator pad = pads.begin()
+            ; pad != pads.end() ; ++pad) {
+        
+        float start_pos = (*pad)->start_position;
+        float end_pos = (*pad)->end_position;
+        
+        glBegin(GL_LINES);
+        
+        glColor3f(0.0f,1.0f,0.0f);
+        glVertex2f(start_pos, 1.0f);
+        glVertex2f(start_pos, 0.5f);
+        
+        glColor3f(1.0f,0.0f,1.0f);
+        glVertex2f(end_pos, 0.5f);
+        glVertex2f(end_pos, 0.0f);
+        
+        glEnd();
+        
+        glBegin(GL_TRIANGLES);
+        glColor3f(0.0f,1.0f,0.0f);
+        glVertex2f(start_pos + fin_width, 1.0f);
+        glVertex2f(start_pos, 1.0f);
+        glVertex2f(start_pos, 1.0f - fin_height);
+        
+        glVertex2f(start_pos, 0.5f);
+        glVertex2f(start_pos + fin_width, 0.5f);
+        glVertex2f(start_pos, 0.5f + fin_height);
+        
+        glColor3f(1.0f,0.0f,1.0f);
+        
+        glVertex2f(end_pos - fin_width, 0.5f);
+        glVertex2f(end_pos, 0.5f);
+        glVertex2f(end_pos, 0.5f - fin_height);
+        
+        glVertex2f(end_pos, 0.0f);
+        glVertex2f(end_pos - fin_width, 0.0f);
+        glVertex2f(end_pos, 0.0f + fin_height);
+        
+        glEnd();
+    }
+}
+
+float SampleEditWindow::screen_x_to_gl(int x) {
+    return (float)(x-view_offset)/(win_width-view_offset*2);
+}
+
+float SampleEditWindow::screen_y_to_gl(int y) {
+    return (float)y/win_height;
+}
+
+int SampleEditWindow::gl_width_to_screen(float w) {
+    return round(w * (win_width-view_offset*2));
+}
+
+float SampleEditWindow::screen_width_to_gl(int w) {
+    return (float)w / (win_width-view_offset*2);
+}
+
+float SampleEditWindow::screen_height_to_gl(int h) {
+    return (float)h / win_height;
+}
+
+Pad* SampleEditWindow::clicked_on_pad(int x, int y) {
+    std::list<Pad*> pads = server->get_pads_for_sample(sample);
+    float x_pos = screen_x_to_gl(x);
+    float y_pos = screen_y_to_gl(y);
+    for (std::list<Pad*>::iterator pad = pads.begin()
+            ; pad != pads.end() ; ++pad) {
+        if (y_pos < 0.5f) {
+            if (fabs(x_pos - (*pad)->start_position) < screen_width_to_gl(click_distance)) {
+                return *pad;
+            }
+        } else {
+            if (fabs(x_pos - (*pad)->end_position) < screen_width_to_gl(click_distance)) {
+                return *pad;
+            }
+        }
+    }
+    return NULL;
+}
+
+void SampleEditWindow::on_mouse_down(int x, int y) {    
+    if (sample != NULL) {
+        Pad* clicked_pad = clicked_on_pad(x, y);
+        if (clicked_pad != NULL) {
+            is_dragging_pad = true;
+            dragged_pad = clicked_pad;
+            drag_location_y = screen_y_to_gl(y);
+        } else {
+            sample->play(screen_x_to_gl(x));
+        }
+    }
+}
+
+void SampleEditWindow::on_mouse_drag(int x, int y) {
+    float x_pos = screen_x_to_gl(x);
+    if (is_dragging_pad && x_pos >= 0.0f && x_pos <= 1.0f) {
+        if (drag_location_y < 0.5f) {
+            dragged_pad->start_position = x_pos;
+        } else {
+            dragged_pad->end_position = x_pos;
+        }
+    }
+}
+
+void SampleEditWindow::on_mouse_up(int x, int y) {
+    if (is_dragging_pad) {
+        is_dragging_pad = false;
+        dragged_pad->hit(1.0f);
+        dragged_pad->release();
+        dragged_pad = NULL;
+    }
 }
 
 void SampleEditWindow::on_button_clicked ()

@@ -12,7 +12,8 @@ class Pad {
 		
 		int x,y;
 		
-		bool has_a_sample; //for some reason the sample is not == NULL when we haven't set it
+		bool has_a_sample;
+        bool sample_has_changed;
 	public:
 		Pad() { Pad(0,0); }
 		Pad(int event_number, int id);
@@ -31,11 +32,10 @@ class Pad {
 		
 		bool is_playing() const;
 		
-		void set_sample(Sample* sample) {
-			this->sample = sample;
-			has_a_sample = true;
-		}
+		void set_sample(Sample* sample);
 		Sample* get_sample() { return sample; }
+        bool sample_is_set() { return has_a_sample; }
+        bool has_sample_changed();
 		
 		void hit(float velocity);
 		void release();
